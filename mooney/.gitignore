@@ -30,8 +30,10 @@ out/
 /nbproject/private/
 /nbbuild/
 /dist/
-/nbdist/
+/nbsdist/
 /.nb-gradle/
 
 ### VS Code ###
 .vscode/
+
+**/application.yml
