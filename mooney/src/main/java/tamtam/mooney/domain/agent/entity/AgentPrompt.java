@@ -33,4 +33,8 @@ public class AgentPrompt {
         this.promptType = promptType;
         this.promptText = promptText;
     }
+
+    public void updatePromptText(String promptText) {
+        this.promptText = promptText;
+    }
 }
