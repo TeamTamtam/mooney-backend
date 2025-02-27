@@ -2,7 +2,10 @@ package tamtam.mooney.domain.budget.entity;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import tamtam.mooney.domain.agent.entity.UserAgent;
 import tamtam.mooney.global.common.entity.BaseTimeEntity;
 
@@ -23,6 +26,8 @@ public class MonthlyComment extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "monthly_budget_id", nullable = false, updatable = false)
+    @NotNull
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private MonthlyBudget monthlyBudget;
 
     @ManyToOne(fetch = FetchType.LAZY)

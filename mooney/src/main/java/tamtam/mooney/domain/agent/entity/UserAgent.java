@@ -22,10 +22,12 @@ public class UserAgent extends BaseTimeEntity {
     @Column(nullable = false)
     private String tone;
 
-    private String promptText;
+    private String memory;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
+    @NotNull
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -35,18 +37,18 @@ public class UserAgent extends BaseTimeEntity {
     private Agent agent;
 
     @Builder
-    public UserAgent(String tone, String promptText, User user, Agent agent) {
+    public UserAgent(String tone, String memory, User user, Agent agent) {
         this.tone = tone;
-        this.promptText = promptText;
+        this.memory = memory;
         this.user = user;
         this.agent = agent;
     }
 
-    public void updateAmount(String tone) {
+    public void updateTone(String tone) {
         this.tone = tone;
     }
 
-    public void updatePromptText(String promptText) {
-        this.promptText = promptText;
+    public void updateMemory(String memory) {
+        this.memory = memory;
     }
 }

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import tamtam.mooney.global.common.entity.BaseTimeEntity;
+import tamtam.mooney.global.common.enums.Role;
 
 import java.time.ZoneId;
 

@@ -1,4 +1,4 @@
-package tamtam.mooney.domain.notification.entity;
+package tamtam.mooney.domain.notification.service;
 
 import java.util.Set;
 

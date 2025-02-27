@@ -3,6 +3,8 @@ package tamtam.mooney.domain.transaction.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.global.common.entity.BaseTimeEntity;
 
@@ -34,6 +36,8 @@ public abstract class Transaction extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
+    @NotNull
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     public Transaction(Long amount, LocalDateTime transactionTime, String transactionSource,

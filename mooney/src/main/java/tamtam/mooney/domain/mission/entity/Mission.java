@@ -39,7 +39,7 @@ public class Mission extends BaseTimeEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_budget_id", nullable = false)
-    private CategoryBudget categoryBudget; // ✅ 연관된 월별 카테고리 예산
+    private CategoryBudget categoryBudget; // 연관된 월별 카테고리 예산
 
     @Builder
     public Mission(LocalDateTime startDate, LocalDateTime endDate, String title, String advice, CategoryBudget categoryBudget) {

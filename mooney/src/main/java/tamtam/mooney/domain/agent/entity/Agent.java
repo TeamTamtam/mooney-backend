@@ -24,18 +24,25 @@ public class Agent extends BaseTimeEntity {
     @Column(nullable = false)
     private String personality;
 
+    private String promptText;
+
     @NotBlank
     @Column(nullable = false)
     private String imgPath;
 
     @Builder
-    public Agent(String agentName, String personality, String imgPath) {
+    public Agent(String agentName, String personality, String promptText, String imgPath) {
         this.agentName = agentName;
         this.personality = personality;
+        this.promptText = promptText;
         this.imgPath = imgPath;
     }
 
-    public void updateAmount(String personality) {
+    public void updatePersonality(String personality) {
         this.personality = personality;
+    }
+
+    public void updatePromptText(String promptText) {
+        this.promptText = promptText;
     }
 }

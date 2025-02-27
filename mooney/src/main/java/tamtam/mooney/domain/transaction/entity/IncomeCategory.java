@@ -6,7 +6,6 @@ import lombok.Getter;
 @Getter
 public enum IncomeCategory {
     // TODO: 수정하기
-
     SALARY("급여", "💰"),                // 월급, 고정 급여
     PART_TIME("알바", "🛠️"),            // 아르바이트 수입
     BUSINESS("사업 수익", "🏢"),         // 사업 운영 수익

@@ -3,7 +3,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tamtam.mooney.domain.notification.entity.Notification;
-import tamtam.mooney.domain.notification.entity.NotificationTypeValidator;
 import tamtam.mooney.domain.notification.repository.NotificationRepository;
 import tamtam.mooney.domain.user.entity.User;
 
