@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
 import tamtam.mooney.domain.user.entity.User;
 
@@ -20,20 +22,24 @@ public class Notification {
     private Long notificationId;
 
     @NotNull
+    @Column(nullable = false)
     private String notificationType;
 
     @NotNull
+    @Column(nullable = false)
     private String title;
 
     @NotNull
+    @Column(nullable = false)
     private String content;
 
     // JSON 형태로 추가 데이터 저장 (예: 링크, 이미지, 기타 옵션)
+    @Lob
     @Column(columnDefinition = "TEXT")
     private String payload;
 
-    @ColumnDefault("false")
     @NotNull
+    @Column(nullable = false)
     private Boolean isRead;
 
     @CreatedDate
@@ -41,24 +47,24 @@ public class Notification {
     private LocalDateTime createdAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
+    @NotNull
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @Builder
-    public Notification(String title, String content, String notificationType,
+    public Notification(String notificationType, String title, String content,
                         String payload, Boolean isRead, User user) {
+        this.notificationType = notificationType;
         this.title = title;
         this.content = content;
-        setType(notificationType);
         this.payload = payload;
         this.isRead = isRead;
         this.user = user;
+        this.createdAt = LocalDateTime.now();
     }
 
-    public void setType(String notificationType) {
-        if (!NotificationTypeValidator.isValid(notificationType)) {
-            throw new IllegalArgumentException("Invalid notification type: " + notificationType);
-        }
-        this.notificationType = notificationType;
+    public void setIsRead(boolean isRead) {
+        this.isRead = isRead;
     }
 }

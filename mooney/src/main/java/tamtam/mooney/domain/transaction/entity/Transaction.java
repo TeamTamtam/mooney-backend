@@ -14,32 +14,33 @@ import java.time.LocalDateTime;
 public abstract class Transaction extends BaseTimeEntity {
 
     @NotNull
+    @Column(nullable = false)
     private Long amount;
 
     @NotNull
-    private String transactionSource;
+    @Column(nullable = false)
+    private LocalDateTime transactionTime;
 
-    @NotNull
-    private LocalDateTime transactionDate;
+    private String transactionSource;
 
     private String sourceApp;
 
     @Setter
-    private String note; // TODO: String 입력받는 것들에 글자 제한 걸기
+    private String note;
 
     @ManyToOne
     @JoinColumn(name = "recurring_transaction_id")
     private RecurringTransaction recurringTransaction;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, updatable = false)
     private User user;
 
-    public Transaction(Long amount, String transactionSource, LocalDateTime transactionDate,
+    public Transaction(Long amount, LocalDateTime transactionTime, String transactionSource,
                        String sourceApp, User user) {
         this.amount = amount;
+        this.transactionTime = transactionTime;
         this.transactionSource = transactionSource;
-        this.transactionDate = transactionDate;
         this.sourceApp = sourceApp;
         this.user = user;
     }

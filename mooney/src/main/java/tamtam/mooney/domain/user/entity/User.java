@@ -6,43 +6,56 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import tamtam.mooney.global.common.entity.BaseTimeEntity;
 
+import java.time.ZoneId;
+
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@Table(name = "user_account")
 public class User extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false)
     private Long userId;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     @NotNull
     private String email;
 
     @NotNull
+    @Column(nullable = false)
     private String password;
 
     @NotNull
+    @Column(nullable = false)
     private String nickname;
 
     @Enumerated(EnumType.STRING)
+    private ZoneId timezone;
+
+    @Enumerated(EnumType.STRING)
     @NotNull
+    @Column(nullable = false)
     private Role role;
 
     @ColumnDefault("true")
     @NotNull
+    @Column(nullable = false)
     private Boolean isPushAlarmEnabled;
 
     @NotNull
+    @Column(nullable = false)
     private Long exp;
 
     @Builder
-    public User(String email, String password, String nickname, Role role, Boolean isPushAlarmEnabled) {
+    public User(String email, String password, String nickname, ZoneId zoneId,
+                Role role, Boolean isPushAlarmEnabled, Long exp) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
+        this.timezone = zoneId;
         this.role = role;
         this.isPushAlarmEnabled = isPushAlarmEnabled != null ? isPushAlarmEnabled : true;
-        this.exp = 0L;
+        this.exp = exp != null ? exp : 0L;
     }
 }

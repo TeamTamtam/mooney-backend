@@ -3,7 +3,8 @@ package tamtam.mooney.domain.budget.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.global.common.entity.BaseTimeEntity;
 
@@ -19,14 +20,18 @@ public class MonthlyBudget extends BaseTimeEntity {
     @Column(updatable = false)
     private Long monthlyBudgetId;
 
-    // 예: 2023-03-01 형태로 해당 월을 표현
-    private LocalDate monthDate;
+    @NotNull
+    @Column(nullable = false)
+    private LocalDate monthDate; // 예: 2023-03-01
 
     @NotNull
+    @Column(nullable = false)
     private Long amount;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false, updatable = false)
+    @NotNull
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
     @Builder

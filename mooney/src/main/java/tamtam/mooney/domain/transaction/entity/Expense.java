@@ -1,7 +1,6 @@
 package tamtam.mooney.domain.transaction.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import tamtam.mooney.domain.user.entity.User;
 
@@ -17,18 +16,20 @@ public class Expense extends Transaction {
     @Column(updatable = false)
     private Long expenseId;
 
-    @NotNull
     private String payee;
+
+    private String paymentMethod;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "expense_category_id")
     private ExpenseCategory expenseCategory;
 
     @Builder
-    public Expense(String payee, ExpenseCategory expenseCategory,
-                   Long amount, String transactionSource, LocalDateTime transactionDate, String sourceApp, User user) {
-        super(amount, transactionSource, transactionDate, sourceApp, user);
+    public Expense(String payee, String paymentMethod, ExpenseCategory expenseCategory,
+                   Long amount, LocalDateTime transactionDate, String transactionSource, String sourceApp, User user) {
+        super(amount, transactionDate, transactionSource, sourceApp, user);
         this.payee = payee;
+        this.paymentMethod = paymentMethod;
         this.expenseCategory = expenseCategory;
     }
 

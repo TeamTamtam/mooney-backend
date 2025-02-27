@@ -9,16 +9,17 @@ import tamtam.mooney.global.common.entity.BaseTimeEntity;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class ExpenseCategory extends BaseTimeEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false)
     private Long expenseCategoryId;
 
     @NotNull
+    @Column(nullable = false)
     private String expenseCategoryName;
 
     @NotNull
+    @Column(nullable = false)
     private String icon;
 
     @Builder

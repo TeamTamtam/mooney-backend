@@ -8,13 +8,10 @@ import org.hibernate.annotations.ColumnDefault;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.global.common.entity.BaseTimeEntity;
 
-import java.math.BigDecimal;
-
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class RecurringTransaction extends BaseTimeEntity {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false)
@@ -24,15 +21,18 @@ public class RecurringTransaction extends BaseTimeEntity {
     private String type; // EXPENSE, INCOME, SAVINGS
 
     @NotNull
-    private String title; // 고정비 항목명 (예: "월세", "보험료")
+    @Column(nullable = false)
+    private String title; // 고정비 항목명
 
     @NotNull
+    @Column(nullable = false)
     private Long amount;
 
     private String period; // 고정비 주기
 
     @ColumnDefault("false")
     @NotNull
+    @Column(nullable = false)
     @Setter
     private Boolean isDeleted;
 
