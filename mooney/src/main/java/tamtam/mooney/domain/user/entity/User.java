@@ -31,7 +31,7 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private String nickname;
 
-    @Enumerated(EnumType.STRING)
+    @NotNull
     private ZoneId timezone;
 
     @Enumerated(EnumType.STRING)
@@ -49,12 +49,12 @@ public class User extends BaseTimeEntity {
     private Long exp;
 
     @Builder
-    public User(String email, String password, String nickname, ZoneId zoneId,
+    public User(String email, String password, String nickname, ZoneId timezone,
                 Role role, Boolean isPushAlarmEnabled, Long exp) {
         this.email = email;
         this.password = password;
         this.nickname = nickname;
-        this.timezone = zoneId;
+        this.timezone = timezone;
         this.role = role;
         this.isPushAlarmEnabled = isPushAlarmEnabled != null ? isPushAlarmEnabled : true;
         this.exp = exp != null ? exp : 0L;
