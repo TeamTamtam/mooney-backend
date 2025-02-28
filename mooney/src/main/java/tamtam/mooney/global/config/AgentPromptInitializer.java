@@ -54,7 +54,6 @@ public class AgentPromptInitializer {
             agentPrompts.forEach(prompt -> {
                 String[] parts = prompt.split(",", 2);
                 agentPromptRepository.save(new AgentPrompt(agent, parts[0].trim(), parts[1].trim()));
-                System.out.println("Saved Prompt for " + agentName + ": " + parts[1].trim());
             });
         });
 

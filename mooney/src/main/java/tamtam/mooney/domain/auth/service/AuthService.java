@@ -13,6 +13,8 @@ import tamtam.mooney.global.exception.CustomException;
 import tamtam.mooney.global.exception.ErrorCode;
 import tamtam.mooney.global.security.JwtProvider;
 
+import java.util.List;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -32,7 +34,7 @@ public class AuthService {
         validateEmailAvailability(requestDto.email());
 
         if (!requestDto.password().equals(requestDto.confirmPassword())) {
-            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+            throw new CustomException(ErrorCode.PASSWORD_MISMATCH);
         }
 
         User newUser = userService.createUser(

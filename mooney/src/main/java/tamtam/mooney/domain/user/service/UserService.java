@@ -42,10 +42,6 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User saveUser(User user) {
-        return userRepository.save(user);
-    }
-
     public void updateRefreshToken(Long userId, String refreshToken) {
         userRepository.findById(userId).ifPresent(user -> {
             user.setRefreshToken(refreshToken);

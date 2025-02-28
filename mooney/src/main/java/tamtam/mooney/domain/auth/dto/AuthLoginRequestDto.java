@@ -1,11 +1,11 @@
 package tamtam.mooney.domain.auth.dto;
 
-import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotBlank;
 
 public record AuthLoginRequestDto(
-        @NotEmpty
+        @NotBlank
         String email,
-        @NotEmpty
+        @NotBlank
         String password
 ) {
 }
