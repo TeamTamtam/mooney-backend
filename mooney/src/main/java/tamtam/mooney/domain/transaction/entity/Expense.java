@@ -1,6 +1,7 @@
 package tamtam.mooney.domain.transaction.entity;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import tamtam.mooney.domain.user.entity.User;
 
@@ -20,8 +21,7 @@ public class Expense extends Transaction {
 
     private String paymentMethod;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "expense_category_id")
+    @NotNull
     private ExpenseCategory expenseCategory;
 
     @Builder

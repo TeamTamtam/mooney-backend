@@ -28,10 +28,7 @@ public class CategoryBudget extends BaseTimeEntity {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private MonthlyBudget monthlyBudget;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "expense_category_id", nullable = false, updatable = false)
     @NotNull
-    @OnDelete(action = OnDeleteAction.CASCADE)
     private ExpenseCategory expenseCategory;
 
     @Builder
