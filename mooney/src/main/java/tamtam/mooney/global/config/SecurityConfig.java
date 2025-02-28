@@ -47,7 +47,7 @@ public class SecurityConfig {
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
                         .requestMatchers("/auth/**", "/public/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .anyRequest().permitAll()); // TODO: 추후 수정
+                        .anyRequest().authenticated());
         ;
         return http.build();
     }

@@ -9,10 +9,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import tamtam.mooney.domain.user.service.UserService;
 
+
 @Tag(name = "User")
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
+
+    @Operation(summary = "유저 닉네임 조회")
+    @GetMapping("/nickname")
+    public ResponseEntity<?> getUserInfo() {
+        return ResponseEntity.ok().body(userService.getCurrentUserNickname());
+    }
 }
