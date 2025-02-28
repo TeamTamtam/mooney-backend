@@ -47,10 +47,7 @@ dependencies {
     //json
     implementation 'org.json:json:20231013'
     // LangChain4j Core
-    implementation("dev.langchain4j:langchain4j:0.29.0")
-    // LangChain4j OpenAI 연동 지원
-    implementation("dev.langchain4j:langchain4j-openai:0.29.0")
-
+    implementation 'dev.langchain4j:langchain4j-open-ai-spring-boot-starter:0.36.2'
 }
 
 dependencyManagement {
