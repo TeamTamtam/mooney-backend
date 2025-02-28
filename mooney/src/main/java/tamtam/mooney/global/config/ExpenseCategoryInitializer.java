@@ -1,4 +1,4 @@
-package tamtam.mooney.domain.transaction.config;
+package tamtam.mooney.global.config;
 
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
