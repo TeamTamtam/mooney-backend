@@ -25,7 +25,7 @@ public class User extends BaseTimeEntity {
 
     @NotNull
     @Column(nullable = false)
-    private String password;
+    private String encryptedPassword;
 
     @NotNull
     @Column(nullable = false)
@@ -48,14 +48,18 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private Long exp;
 
+    @Getter
+    @Setter
+    private String refreshToken;
+
     @Builder
-    public User(String email, String password, String nickname, ZoneId timezone,
+    public User(String email, String encryptedPassword, String nickname, ZoneId timezone,
                 Role role, Boolean isPushAlarmEnabled, Long exp) {
         this.email = email;
-        this.password = password;
+        this.encryptedPassword = encryptedPassword;
         this.nickname = nickname;
-        this.timezone = timezone;
-        this.role = role;
+        this.timezone = timezone != null ? timezone : ZoneId.of("Asia/Seoul");
+        this.role = role != null ? role : Role.ROLE_USER;
         this.isPushAlarmEnabled = isPushAlarmEnabled != null ? isPushAlarmEnabled : true;
         this.exp = exp != null ? exp : 0L;
     }

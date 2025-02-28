@@ -25,6 +25,10 @@ public enum ErrorCode {
     NOT_AUTHENTICATED(401, "로그인 상태가 아닙니다."),
     // 권한이 없는 요청을 보냄
     UNAUTHORIZED_REQUEST(401,"권한이 없습니다."),
+    // 로그인 시 잘못된 패스워드 입력
+    INVALID_CREDENTIALS(401, "이메일 또는 비밀번호를 잘못 입력하셨습니다."),
+    // 유효하지 않은 토큰
+    INVALID_TOKEN(401, "유효하지 않은 토큰입니다."),
 
     // 404 Not Found
     // 각 리소스를 찾지 못함
