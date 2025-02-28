@@ -20,7 +20,7 @@ public class AuthController {
     @GetMapping("/check-email")
     public ResponseEntity<String> checkEmailAvailability(@RequestParam String email) {
         authService.validateEmailAvailability(email);
-        return ResponseEntity.ok("사용 가능한 이메일입니다.");
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/signup")
