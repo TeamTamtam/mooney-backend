@@ -13,8 +13,6 @@ import tamtam.mooney.global.exception.CustomException;
 import tamtam.mooney.global.exception.ErrorCode;
 import tamtam.mooney.global.security.JwtProvider;
 
-import java.util.List;
-
 @Service
 @Transactional
 @RequiredArgsConstructor
