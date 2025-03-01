@@ -19,4 +19,9 @@ public class AgentService {
         return agentRepository.findByAgentName("무니")
                 .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
     }
+
+    public Agent getAgentById(Long agentId) {
+        return agentRepository.findById(agentId)
+                .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+    }
 }
