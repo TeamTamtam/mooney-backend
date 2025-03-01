@@ -5,6 +5,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tamtam.mooney.domain.user.dto.UserSettingsResponseDto;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.repository.UserRepository;
 import tamtam.mooney.global.exception.CustomException;
@@ -62,5 +63,11 @@ public class UserService {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new CustomException(ErrorCode.NOT_AUTHENTICATED));
+    }
+
+    @Transactional(readOnly = true)
+    public UserSettingsResponseDto getUserSettingsInfo() {
+        User user = getCurrentUser();
+        return new UserSettingsResponseDto(user.getNickname(), user.getEmail());
     }
 }
