@@ -22,7 +22,8 @@ public enum ExpenseCategory {
     EDUCATION("교육/학습", "📚"),
     CHILDCARE("자녀/육아", "👶"),
     PET("반려동물", "🐶"),
-    GIFT_CEREMONY("경조/선물", "🎁");
+    GIFT_CEREMONY("경조/선물", "🎁"),
+    OTHER("이체", "↔️"); // 그 외
 
     @NotNull
     private final String categoryName;
