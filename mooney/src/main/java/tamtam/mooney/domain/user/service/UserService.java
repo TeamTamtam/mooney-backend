@@ -10,6 +10,8 @@ import tamtam.mooney.domain.user.repository.UserRepository;
 import tamtam.mooney.global.exception.CustomException;
 import tamtam.mooney.global.exception.ErrorCode;
 
+import java.time.ZoneId;
+
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -38,6 +40,7 @@ public class UserService {
                 .email(email)
                 .encryptedPassword(encryptedPassword)
                 .nickname(nickname)
+                .timezone(ZoneId.of("Asia/Seoul"))
                 .build();
         return userRepository.save(user);
     }

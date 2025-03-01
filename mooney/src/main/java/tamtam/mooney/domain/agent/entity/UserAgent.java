@@ -1,6 +1,5 @@
 package tamtam.mooney.domain.agent.entity;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
@@ -18,11 +17,15 @@ public class UserAgent extends BaseTimeEntity {
     @Column(updatable = false)
     private Long userAgentId;
 
-    @NotBlank
+    @Enumerated(EnumType.STRING)
+    @NotNull
     @Column(nullable = false)
-    private String tone;
+    private AgentTone agentTone;
 
     private String memory;
+
+    @Column(nullable = false)
+    private boolean isActive;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
@@ -37,18 +40,23 @@ public class UserAgent extends BaseTimeEntity {
     private Agent agent;
 
     @Builder
-    public UserAgent(String tone, String memory, User user, Agent agent) {
-        this.tone = tone;
-        this.memory = memory;
+    public UserAgent(AgentTone agentTone, boolean isActive, User user, Agent agent) {
+        this.agentTone = agentTone;
+        this.isActive = isActive;
+        this.memory = null;
         this.user = user;
         this.agent = agent;
     }
 
-    public void updateTone(String tone) {
-        this.tone = tone;
+    public void updateTone(AgentTone agentTone) {
+        this.agentTone = agentTone;
     }
 
     public void updateMemory(String memory) {
         this.memory = memory;
+    }
+
+    public void setActive(boolean isActive) {
+        this.isActive = isActive;
     }
 }

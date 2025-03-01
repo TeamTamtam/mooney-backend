@@ -16,7 +16,7 @@ import tamtam.mooney.domain.budget.service.MonthlyBudgetService;
 public class BudgetController {
     private final MonthlyBudgetService monthlyBudgetService;
 
-    @Operation(summary = "Budget 기본 API")
+    @Operation(summary = "첫 예산 수립")
     @PostMapping("/first-budget")
     public ResponseEntity<?> saveFirstBudget(@RequestBody @Valid FirstBudgetRequestDto firstBudgetRequestDto) {
         monthlyBudgetService.saveFirstBudget(firstBudgetRequestDto);
