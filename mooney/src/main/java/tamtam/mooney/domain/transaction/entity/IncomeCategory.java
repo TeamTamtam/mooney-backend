@@ -19,7 +19,7 @@ public enum IncomeCategory {
     PRIZE("당첨금", "🎯"),             // 복권, 이벤트 당첨금
     SUBSIDY("보조금", "🏛️"),           // 정부 지원금, 학자금 지원
     SECOND_JOB("부업", "🌙"),          // 부업, 프리랜서 수익
-    ETC("이체", "↔️");                 // 그 외 기타 수입
+    OTHER("이체", "↔️");                 // 그 외 기타 수입
 
     @NotNull
     private final String categoryName;
