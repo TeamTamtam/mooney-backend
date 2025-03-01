@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import tamtam.mooney.domain.auth.dto.AuthSignUpRequestDto;
 import tamtam.mooney.domain.auth.dto.AuthLoginRequestDto;
 import tamtam.mooney.domain.auth.dto.TokenResponseDto;
@@ -32,6 +33,10 @@ public class AuthService {
     public TokenResponseDto signUp(AuthSignUpRequestDto requestDto) {
         validateEmailAvailability(requestDto.email());
 
+        if (!requestDto.termsAgreed()) {
+            throw new CustomException(ErrorCode.INVALID_INPUT_VALUE);
+        }
+
         if (!requestDto.password().equals(requestDto.confirmPassword())) {
             throw new CustomException(ErrorCode.PASSWORD_MISMATCH);
         }
@@ -44,6 +49,7 @@ public class AuthService {
 
         return generateTokenResponse(newUser);
     }
+
 
     public TokenResponseDto login(AuthLoginRequestDto requestDto) {
         User user = userService.getUserByEmail(requestDto.email());
