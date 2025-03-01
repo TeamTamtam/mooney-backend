@@ -51,7 +51,6 @@ public class TransactionService {
                         .incomeId(income.getIncomeId())
                         .amount(income.getAmount())
                         .transactionTime(income.getTransactionTime())
-                        .incomeCategory(income.getIncomeCategory())
                         .transactionSource(income.getTransactionSource())
                         .note(income.getNote())
                         .build())

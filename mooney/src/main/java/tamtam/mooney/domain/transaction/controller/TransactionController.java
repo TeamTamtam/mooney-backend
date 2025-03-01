@@ -13,10 +13,8 @@ import tamtam.mooney.domain.transaction.dto.IncomeAddRequestDto;
 import tamtam.mooney.domain.transaction.service.ExpenseService;
 import tamtam.mooney.domain.transaction.service.IncomeService;
 import tamtam.mooney.domain.transaction.service.TransactionService;
-import tamtam.mooney.domain.user.service.UserService;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Tag(name = "Transaction")
 @RestController
@@ -37,8 +35,8 @@ public class TransactionController {
     @Operation(summary = "수입 내역 추가")
     @PostMapping("/incomes")
     public ResponseEntity<String> createIncome(@RequestBody @Valid IncomeAddRequestDto request) {
-        String category = incomeService.createIncome(request);
-        return ResponseEntity.ok(category);
+        incomeService.createIncome(request);
+        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "사용자가 요청한 날짜의 수입 및 지출 내역 조회")
