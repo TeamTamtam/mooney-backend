@@ -22,4 +22,10 @@ public class UserController {
     public ResponseEntity<?> getUserInfo() {
         return ResponseEntity.ok().body(userService.getCurrentUserNickname());
     }
+
+    @Operation(summary = "설정에서 유저 정보 조회")
+    @GetMapping("/settings")
+    public ResponseEntity<?> getUserSettingsInfo() {
+        return ResponseEntity.ok().body(userService.getUserSettingsInfo());
+    }
 }
