@@ -18,9 +18,10 @@ public class UserAgent extends BaseTimeEntity {
     @Column(updatable = false)
     private Long userAgentId;
 
-    @NotBlank
+    @Enumerated(EnumType.STRING)
+    @NotNull
     @Column(nullable = false)
-    private String tone;
+    private AgentTone agentTone;
 
     private String memory;
 
@@ -37,15 +38,15 @@ public class UserAgent extends BaseTimeEntity {
     private Agent agent;
 
     @Builder
-    public UserAgent(String tone, String memory, User user, Agent agent) {
-        this.tone = tone;
+    public UserAgent(AgentTone agentTone, String memory, User user, Agent agent) {
+        this.agentTone = agentTone;
         this.memory = memory;
         this.user = user;
         this.agent = agent;
     }
 
-    public void updateTone(String tone) {
-        this.tone = tone;
+    public void updateTone(AgentTone agentTone) {
+        this.agentTone = agentTone;
     }
 
     public void updateMemory(String memory) {

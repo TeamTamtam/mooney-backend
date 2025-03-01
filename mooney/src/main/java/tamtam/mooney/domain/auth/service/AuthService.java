@@ -5,7 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import tamtam.mooney.domain.agent.service.UserAgentService;
 import tamtam.mooney.domain.auth.dto.AuthSignUpRequestDto;
 import tamtam.mooney.domain.auth.dto.AuthLoginRequestDto;
 import tamtam.mooney.domain.auth.dto.TokenResponseDto;
@@ -22,6 +22,7 @@ public class AuthService {
     private final UserService userService;
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
+    private final UserAgentService userAgentService;
 
     @Transactional(readOnly = true)
     public void validateEmailAvailability(String email) {
@@ -41,15 +42,18 @@ public class AuthService {
             throw new CustomException(ErrorCode.PASSWORD_MISMATCH);
         }
 
+        // 새로운 User 생성
         User newUser = userService.createUser(
                 requestDto.email(),
                 encodePassword(requestDto.password()),
                 requestDto.nickname()
         );
 
+        // '무니' Agent를 User에게 추가
+        userAgentService.assignDefaultAgentToUser(newUser);
+
         return generateTokenResponse(newUser);
     }
-
 
     public TokenResponseDto login(AuthLoginRequestDto requestDto) {
         User user = userService.getUserByEmail(requestDto.email());
