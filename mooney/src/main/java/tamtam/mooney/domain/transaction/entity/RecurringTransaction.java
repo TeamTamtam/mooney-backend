@@ -18,7 +18,7 @@ public class RecurringTransaction extends BaseTimeEntity {
     private Long recurringTransactionId;
 
     @NotNull
-    private String type; // EXPENSE, INCOME, SAVINGS
+    private String recurringType; // EXPENSE, INCOME, SAVINGS
 
     @NotNull
     @Column(nullable = false)
@@ -41,11 +41,11 @@ public class RecurringTransaction extends BaseTimeEntity {
     private User user;
 
     @Builder
-    public RecurringTransaction(String type,  String title, Long amount, String period, User user) {
+    public RecurringTransaction(String recurringType,  String title, Long amount, String period, User user) {
         this.title = title;
         this.amount = amount;
         this.period = period;
-        this.type = type;
+        this.recurringType = recurringType;
         this.isDeleted = false;
         this.user = user;
     }
