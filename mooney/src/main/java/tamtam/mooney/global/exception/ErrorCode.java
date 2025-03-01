@@ -33,6 +33,8 @@ public enum ErrorCode {
     INVALID_TOKEN(401, "유효하지 않은 토큰입니다."),
     EXPIRED_ACCESS_TOKEN(401, "만료된 엑세스 토큰입니다."),
     EXPIRED_REFRESH_TOKEN(401, "만료된 리프레시 토큰입니다."),
+    // 쿠키에 리프레시 토큰이 들어있지 않은 경우
+    NO_COOKIE(401, "쿠키에 리프레시 토큰이 존재하지 않습니다."),
 
     // 404 Not Found
     // 각 리소스를 찾지 못함
@@ -45,7 +47,7 @@ public enum ErrorCode {
     // 500 Internal Server Error
     // 외부 API 사용 도중 에러
     EXTERNAL_API_ERROR(500, "외부 API 사용 중 문제가 발생했습니다."),
-    INTERNAL_SERVER_ERROR(500, "서버 내부 오류가 발생했습니다.")
+    INTERNAL_SERVER_ERROR(500, "서버 내부 오류가 발생했습니다."),
     ;
 
     private final int status;

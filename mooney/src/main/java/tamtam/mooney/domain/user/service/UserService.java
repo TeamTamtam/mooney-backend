@@ -42,8 +42,8 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public void updateRefreshToken(Long userId, String refreshToken) {
-        userRepository.findById(userId).ifPresent(user -> {
+    public void updateRefreshToken(String username, String refreshToken) {
+        userRepository.findByEmail(username).ifPresent(user -> {
             user.setRefreshToken(refreshToken);
             userRepository.save(user);
         });

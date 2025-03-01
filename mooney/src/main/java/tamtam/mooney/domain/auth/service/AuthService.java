@@ -1,5 +1,6 @@
 package tamtam.mooney.domain.auth.service;
 
+import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -55,23 +56,25 @@ public class AuthService {
     }
 
     public TokenResponseDto refreshAccessToken(String refreshToken) {
-        Long userId = jwtProvider.validateToken(refreshToken);
-        User user = userService.getUserById(userId);
+        jwtProvider.validateRefreshToken(refreshToken);
 
-        if (!user.getRefreshToken().equals(refreshToken)) {
+        Claims claims = jwtProvider.getRefreshTokenClaims(refreshToken);
+        User user = userService.getUserByEmail(claims.getSubject());
+
+        if (user == null || !user.getRefreshToken().equals(refreshToken)) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
 
-        String newAccessToken = jwtProvider.createAccessToken(userId);
+        String newAccessToken = jwtProvider.generateAccessToken(user.getEmail());
         return new TokenResponseDto(newAccessToken, refreshToken);
     }
 
     // 토큰 생성 및 저장
     private TokenResponseDto generateTokenResponse(User user) {
-        String accessToken = jwtProvider.createAccessToken(user.getUserId());
-        String refreshToken = jwtProvider.createRefreshToken(user.getUserId());
+        String accessToken = jwtProvider.generateAccessToken(user.getEmail());
+        String refreshToken = jwtProvider.generateRefreshToken(user.getEmail());
 
-        userService.updateRefreshToken(user.getUserId(), refreshToken);
+        userService.updateRefreshToken(user.getEmail(), refreshToken);
         return new TokenResponseDto(accessToken, refreshToken);
     }
 
