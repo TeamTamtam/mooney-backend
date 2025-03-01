@@ -1,7 +1,6 @@
 package tamtam.mooney.domain.transaction.entity;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import tamtam.mooney.domain.user.entity.User;
 
@@ -18,16 +17,11 @@ public class Income extends Transaction {
 
     private String payer;
 
-    @Enumerated(EnumType.STRING)
-    @NotNull
-    @Column(nullable = false)
-    private IncomeCategory incomeCategory;
+    // private String incomeCategory;
 
     @Builder
-    public Income(String payer, IncomeCategory incomeCategory,
-                  Long amount, LocalDateTime transactionDate, String transactionSource, String sourceApp, User user) {
+    public Income(String payer, Long amount, LocalDateTime transactionDate, String transactionSource, String sourceApp, User user) {
         super(amount, transactionDate, transactionSource, sourceApp, user);
         this.payer = payer;
-        this.incomeCategory = incomeCategory;
     }
 }
