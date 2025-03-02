@@ -23,8 +23,7 @@ jobs:
 
       - name: Make docker-compose.yml
         run: |
-          mkdir -p ./mooney
-          echo "${{ secrets.DOCKER_COMPOSE }}" > ./mooney/docker-compose.yml
+          echo "${{ secrets.DOCKER_COMPOSE }}" > ./docker-compose.yml
 
       - name: Gradle Caching
         uses: actions/cache@v3
