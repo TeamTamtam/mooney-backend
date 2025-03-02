@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import tamtam.mooney.domain.transaction.dto.DailyTransactionResponseDto;
 import tamtam.mooney.domain.transaction.dto.ExpenseAddRequestDto;
 import tamtam.mooney.domain.transaction.dto.IncomeAddRequestDto;
+import tamtam.mooney.domain.transaction.dto.MonthlyTransactionResponseDto;
 import tamtam.mooney.domain.transaction.service.ExpenseService;
 import tamtam.mooney.domain.transaction.service.IncomeService;
 import tamtam.mooney.domain.transaction.service.TransactionService;
@@ -39,9 +40,16 @@ public class TransactionController {
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "사용자가 요청한 날짜의 수입 및 지출 내역 조회")
+    @Operation(summary = "특정 날짜의 수입 및 지출 내역 조회")
     @GetMapping("/daily")
     public ResponseEntity<DailyTransactionResponseDto> getTransactionsByDate(@RequestParam("date") @NotNull LocalDate date) {
         return ResponseEntity.ok(transactionService.getTransactionsByDate(date));
+    }
+
+    @Operation(summary = "특정 연도와 월의 수입 및 지출 내역 조회")
+    @GetMapping("/monthly")
+    public ResponseEntity<MonthlyTransactionResponseDto> getTransactionsByMonth(@RequestParam("year") @NotNull int year,
+                                                                                @RequestParam("month") @NotNull int month) {
+        return ResponseEntity.ok(transactionService.getTransactionsByMonth(year, month));
     }
 }
