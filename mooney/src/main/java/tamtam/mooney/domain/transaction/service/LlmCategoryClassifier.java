@@ -24,7 +24,7 @@ public class LlmCategoryClassifier {
         );
 
         String requestBody = String.format(
-                "{ \"model\": \"gpt-4\", \"messages\": [{\"role\": \"user\", \"content\": \"%s\"}], \"max_tokens\": 10 }",
+                "{ \"model\": \"gpt-4o-mini\", \"messages\": [{\"role\": \"user\", \"content\": \"%s\"}], \"max_tokens\": 10 }",
                 prompt
         );
 
