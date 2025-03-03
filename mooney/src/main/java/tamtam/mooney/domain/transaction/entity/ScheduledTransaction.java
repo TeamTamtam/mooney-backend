@@ -23,8 +23,7 @@ public class ScheduledTransaction extends BaseTimeEntity {
     @NotNull
     private String title;
 
-    @NotNull
-    private Long amount;
+    private long amount;
 
     @NotNull
     @Column(nullable = false)
@@ -41,4 +40,8 @@ public class ScheduledTransaction extends BaseTimeEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "transaction_id")
     private Transaction transaction;
+
+    public void updateAmount(long newAmount) {
+        this.amount = (newAmount < 0) ? 0L : newAmount;
+    }
 }

@@ -7,5 +7,5 @@ public record CategoryBudgetDto(
         @NotNull
         ExpenseCategory expenseCategory,
         @NotNull
-        Long amount
+        long amount
 ) {}

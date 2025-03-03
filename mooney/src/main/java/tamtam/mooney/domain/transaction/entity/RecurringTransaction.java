@@ -4,7 +4,6 @@ package tamtam.mooney.domain.transaction.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.global.common.entity.BaseTimeEntity;
 
@@ -26,9 +25,7 @@ public class RecurringTransaction extends BaseTimeEntity {
     @Column(nullable = false)
     private String title; // 고정비 항목명
 
-    @NotNull
-    @Column(nullable = false)
-    private Long amount;
+    private long amount;
 
     private String period; // 고정비 주기
 
@@ -39,7 +36,7 @@ public class RecurringTransaction extends BaseTimeEntity {
     private User user;
 
     @Builder
-    public RecurringTransaction(String title, Long amount, String period,
+    public RecurringTransaction(String title, long amount, String period,
                                 String recurringType, LocalDate endDate, User user) {
         this.title = title;
         this.amount = amount;
@@ -47,5 +44,9 @@ public class RecurringTransaction extends BaseTimeEntity {
         this.recurringType = recurringType;
         this.endDate = endDate;
         this.user = user;
+    }
+
+    public void updateAmount(long newAmount) {
+        this.amount = (newAmount < 0) ? 0L : newAmount;
     }
 }

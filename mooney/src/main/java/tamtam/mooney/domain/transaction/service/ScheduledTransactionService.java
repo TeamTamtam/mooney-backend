@@ -20,9 +20,8 @@ import java.util.stream.Collectors;
 public class ScheduledTransactionService {
 
     private final ScheduledTransactionRepository scheduledTransactionRepository;
-    private final UserService userService;
 
-    // 특정 월의 ScheduledTransaction 정보를 조회
+    // 특정 월의 모든 ScheduledTransaction 정보를 조회
     @Transactional(readOnly = true)
     public List<ScheduledTransactionResponseDto> getScheduledTransactionsByMonth(User user, int year, int month) {
         LocalDate startOfMonth = YearMonth.of(year, month).atDay(1);
@@ -36,16 +35,16 @@ public class ScheduledTransactionService {
     }
 
     @Transactional(readOnly = true)
-    public Long getTotalScheduledTransactionAmountByMonth(User user, int year, int month) {
-        LocalDate startOfMonth = YearMonth.of(year, month).atDay(1);
-        LocalDate endOfMonth = YearMonth.of(year, month).atEndOfMonth();
-        return scheduledTransactionRepository.getTotalAmountByUserAndScheduledDateBetween(user, startOfMonth, endOfMonth);
-    }
-
-    @Transactional(readOnly = true)
     public Long getTotalPendingScheduledTransactionAmountByMonth(User user, int year, int month) {
         LocalDate startOfMonth = YearMonth.of(year, month).atDay(1);
         LocalDate endOfMonth = YearMonth.of(year, month).atEndOfMonth();
         return scheduledTransactionRepository.getTotalAmountByUserAndTransactionIsNullAndScheduledDateBetween(user, startOfMonth, endOfMonth);
     }
+
+    /*@Transactional(readOnly = true)
+    public Long getTotalScheduledTransactionAmountByMonth(User user, int year, int month) {
+        LocalDate startOfMonth = YearMonth.of(year, month).atDay(1);
+        LocalDate endOfMonth = YearMonth.of(year, month).atEndOfMonth();
+        return scheduledTransactionRepository.getTotalAmountByUserAndScheduledDateBetween(user, startOfMonth, endOfMonth);
+    }*/
 }

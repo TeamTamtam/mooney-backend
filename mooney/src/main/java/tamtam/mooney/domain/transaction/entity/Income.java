@@ -15,7 +15,7 @@ public class Income extends Transaction {
     private String payer;
 
     @Builder
-    public Income(String payer, Long amount, LocalDateTime transactionTime,
+    public Income(String payer, long amount, LocalDateTime transactionTime,
                   String transactionSource, String sourceApp, User user) {
         super(amount, transactionTime, transactionSource, sourceApp, user);
         this.payer = payer;

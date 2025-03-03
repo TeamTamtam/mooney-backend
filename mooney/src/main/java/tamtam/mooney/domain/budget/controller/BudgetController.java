@@ -10,8 +10,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import tamtam.mooney.domain.budget.dto.FirstBudgetRequestDto;
-import tamtam.mooney.domain.budget.dto.MonthlyBudgetProgressResponseDto;
-import tamtam.mooney.domain.budget.service.MonthlyBudgetService;
+import tamtam.mooney.domain.budget.dto.BudgetModifyRequestDto;
+import tamtam.mooney.domain.budget.dto.BudgetProgressResponseDto;
+import tamtam.mooney.domain.budget.service.BudgetService;
 
 import java.time.LocalDate;
 
@@ -20,21 +21,33 @@ import java.time.LocalDate;
 @RequiredArgsConstructor
 @RequestMapping("/budgets")
 public class BudgetController {
-    private final MonthlyBudgetService monthlyBudgetService;
+    private final BudgetService budgetService;
 
     @Operation(summary = "첫 예산 수립")
     @PostMapping("/first-budget")
     public ResponseEntity<?> saveFirstBudget(@RequestBody @Valid FirstBudgetRequestDto firstBudgetRequestDto) {
-        monthlyBudgetService.saveFirstBudget(firstBudgetRequestDto);
+        budgetService.saveFirstBudget(firstBudgetRequestDto);
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "월별 예산 조회")
-    @GetMapping("/monthly")
-    public ResponseEntity<MonthlyBudgetProgressResponseDto> getMonthlyBudgetProgress(
-            @RequestParam @NotNull @Min(1900) int year,
-            @RequestParam @NotNull @Min(1) @Max(12) int month,
-            @RequestParam @NotNull LocalDate today) {
-        return ResponseEntity.ok(monthlyBudgetService.getMonthlyBudgetProgress(year, month, today));
+    @Operation(summary = "특정 월의 예산 진행 조회")
+    @GetMapping("/progress")
+    public ResponseEntity<BudgetProgressResponseDto> getBudgetProgress(@RequestParam @NotNull @Min(1900) int year,
+                                                                       @RequestParam @NotNull @Min(1) @Max(12) int month,
+                                                                       @RequestParam @NotNull LocalDate today) {
+        return ResponseEntity.ok(budgetService.getBudgetProgress(year, month, today));
+    }
+
+    @Operation(summary = "특정 월의 예산 계획 조회")
+    @GetMapping("/plan")
+    public ResponseEntity<?> getBudgetPlan(@RequestParam @NotNull @Min(1900) int year,
+                                           @RequestParam @NotNull @Min(1) @Max(12) int month) {
+        return ResponseEntity.ok(budgetService.getBudgetPlan(year, month));
+    }
+
+    @Operation(summary = "특정 월의 예산 계획 수정")
+    @PatchMapping("/plan")
+    public ResponseEntity<?> modifyBudgetPlan(@RequestBody @Valid BudgetModifyRequestDto budgetModifyRequestDto) {
+        return ResponseEntity.ok(budgetService.modifyBudgetPlan(budgetModifyRequestDto));
     }
 }

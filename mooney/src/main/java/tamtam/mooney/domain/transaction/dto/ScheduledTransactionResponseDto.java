@@ -7,10 +7,10 @@ import java.time.LocalDate;
 
 @Builder
 public record ScheduledTransactionResponseDto(
-        Long scheduledTransactionId,
+        long scheduledTransactionId,
         String transactionType,
         String title,
-        Long amount,
+        long amount,
         LocalDate scheduledDate
 ) {
     public static ScheduledTransactionResponseDto from(ScheduledTransaction scheduledTransaction) {

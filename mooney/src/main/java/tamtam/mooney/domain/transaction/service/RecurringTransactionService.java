@@ -3,7 +3,7 @@ package tamtam.mooney.domain.transaction.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tamtam.mooney.domain.budget.dto.RecurringTransactionDto;
+import tamtam.mooney.domain.transaction.dto.RecurringTransactionDto;
 import tamtam.mooney.domain.transaction.entity.RecurringTransaction;
 import tamtam.mooney.domain.transaction.repository.RecurringTransactionRepository;
 import tamtam.mooney.domain.user.entity.User;

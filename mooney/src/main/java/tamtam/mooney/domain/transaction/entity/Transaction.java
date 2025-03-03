@@ -21,9 +21,7 @@ public abstract class Transaction extends BaseTimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long transactionId;
 
-    @NotNull
-    @Column(nullable = false)
-    private Long amount;
+    private long amount;
 
     @NotNull
     @Column(nullable = false)
@@ -46,7 +44,7 @@ public abstract class Transaction extends BaseTimeEntity {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
-    public Transaction(Long amount, LocalDateTime transactionTime, String transactionSource,
+    public Transaction(long amount, LocalDateTime transactionTime, String transactionSource,
                        String sourceApp, User user) {
         this.amount = amount;
         this.transactionTime = transactionTime;
@@ -59,7 +57,7 @@ public abstract class Transaction extends BaseTimeEntity {
         this.recurringTransaction = recurringTransaction;
     }
 
-    public void updateAmount(Long newAmount) {
-        this.amount = (newAmount == null || newAmount < 0) ? 0L : newAmount;
+    public void updateAmount(long newAmount) {
+        this.amount = (newAmount < 0) ? 0L : newAmount;
     }
 }
