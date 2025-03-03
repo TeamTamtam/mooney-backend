@@ -1,40 +1,39 @@
 package tamtam.mooney.domain.budget.service;
 
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tamtam.mooney.domain.budget.dto.BudgetModifyRequestDto;
-import tamtam.mooney.domain.budget.dto.BudgetProgressResponseDto;
-import tamtam.mooney.domain.budget.dto.CategoryBudgetProgressUnitDto;
-import tamtam.mooney.domain.budget.dto.FirstBudgetRequestDto;
+import tamtam.mooney.domain.budget.dto.*;
+import tamtam.mooney.domain.budget.entity.CategoryBudget;
 import tamtam.mooney.domain.budget.entity.MonthlyBudget;
 import tamtam.mooney.domain.budget.repository.MonthlyBudgetRepository;
-import tamtam.mooney.domain.transaction.dto.RecurringTransactionDto;
+import tamtam.mooney.domain.transaction.entity.ExpenseCategory;
+import tamtam.mooney.domain.transaction.entity.ScheduledTransaction;
 import tamtam.mooney.domain.transaction.service.ExpenseService;
 import tamtam.mooney.domain.transaction.service.RecurringTransactionService;
 import tamtam.mooney.domain.transaction.service.ScheduledTransactionService;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.service.UserService;
+import tamtam.mooney.global.exception.CustomException;
+import tamtam.mooney.global.exception.ErrorCode;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class BudgetService {
     private final MonthlyBudgetRepository monthlyBudgetRepository;
+    private final MonthlyBudgetService monthlyBudgetService;
+    private final CategoryBudgetService categoryBudgetService;
     private final UserService userService;
     private final RecurringTransactionService recurringTransactionService;
     private final ScheduledTransactionService scheduledTransactionService;
     private final ExpenseService expenseService;
-    private final MonthlyBudgetService monthlyBudgetService;
-    private final CategoryBudgetService categoryBudgetService;
 
     // 첫 예산 수립
     public void saveFirstBudget(FirstBudgetRequestDto requestDto) {
@@ -55,11 +54,12 @@ public class BudgetService {
         User user = userService.getCurrentUser();
         LocalDate startOfMonth = LocalDate.of(year, month, 1);
         LocalDate endOfMonth = startOfMonth.withDayOfMonth(startOfMonth.lengthOfMonth());
+
         // 월 예산 총액
         MonthlyBudget monthlyBudget = monthlyBudgetService.getMonthlyBudget(user, startOfMonth);
         Long monthlyBudgetAmount = monthlyBudget.getAmount();
         // 예정되어 있는 고정 지출 조회 (아직 발생하지 않은)
-        long pendingExpenseAmount = Optional.ofNullable(scheduledTransactionService.getTotalPendingScheduledTransactionAmountByMonth(user, year, month)).orElse(0L);
+        long pendingExpenseAmount = Optional.ofNullable(scheduledTransactionService.getTotalPendingScheduledTransactionAmountByMonth(user, startOfMonth, endOfMonth)).orElse(0L);
         // 현재까지 발생한 지출 조회
         long totalExpenseAmount = Optional.ofNullable(expenseService.getTotalExpenseAmountForMonth(user, startOfMonth, endOfMonth)).orElse(0L);
         // 남은 예산 계산
@@ -68,7 +68,7 @@ public class BudgetService {
         // 하루 예산 계산 (남은 일 수 기준)
         long remainingDays = today.until(endOfMonth).getDays() + 1; // 오늘 포함
         Long dailyBudgetAmount = remainingDays > 0 ? remainingBudgetAmount / remainingDays : 0;
-        List<CategoryBudgetProgressUnitDto> categoryBudgets = categoryBudgetService.getCategoryBudgets(user, monthlyBudget, startOfMonth, endOfMonth);
+        List<CategoryBudgetProgressUnitDto> categoryBudgets = categoryBudgetService.getCategoryBudgetProgresses(user, monthlyBudget, startOfMonth, endOfMonth);
 
         return BudgetProgressResponseDto.builder()
                 .remainingBudgetAmount(remainingBudgetAmount)
@@ -80,9 +80,68 @@ public class BudgetService {
                 .build();
     }
 
-    public Object getBudgetPlan(@NotNull @Min(1900) int year, @NotNull @Min(1) @Max(12) int month) {
+    // 예산 계획 조회
+    @Transactional(readOnly = true)
+    public BudgetPlanResponseDto getBudgetPlan(int year, int month) {
+        User user = userService.getCurrentUser();
+        LocalDate startOfMonth = LocalDate.of(year, month, 1);
+        LocalDate endOfMonth = startOfMonth.withDayOfMonth(startOfMonth.lengthOfMonth());
+
+        // 월 예산 총액
+        MonthlyBudget monthlyBudget = monthlyBudgetService.getMonthlyBudget(user, startOfMonth);
+        Long monthlyBudgetAmount = monthlyBudget.getAmount();
+        // 카테고리별 예산
+        List<CategoryBudgetPlanUnitDto> categoryBudgets = categoryBudgetService.getCategoryBudgetPlans(user, monthlyBudget, startOfMonth);
+        // 이번 달 고정비 가져오기
+        List<ScheduledTransaction> scheduledTransactions = scheduledTransactionService.getScheduledExpensesByMonth(user, startOfMonth, endOfMonth);
+        // 고정 지출(EXPENSE) 및 저축(SAVINGS) 변환
+        List<BudgetPlanRecurringTransactionUnitDto> fixedExpenses = scheduledTransactions.stream()
+                .filter(st -> "EXPENSE".equals(st.getRecurringTransaction().getRecurringType()))
+                .map(st -> new BudgetPlanRecurringTransactionUnitDto(
+                        st.getRecurringTransaction().getTitle(),
+                        st.getRecurringTransaction().getAmount()
+                ))
+                .toList();
+        List<BudgetPlanRecurringTransactionUnitDto> fixedSavings = scheduledTransactions.stream()
+                .filter(st -> "SAVINGS".equals(st.getRecurringTransaction().getRecurringType()))
+                .map(st -> new BudgetPlanRecurringTransactionUnitDto(
+                        st.getRecurringTransaction().getTitle(),
+                        st.getRecurringTransaction().getAmount()
+                ))
+                .toList();
+
+        return BudgetPlanResponseDto.builder()
+                .monthlyBudgetAmount(monthlyBudgetAmount)
+                .fixedExpense(fixedExpenses)
+                .fixedSavings(fixedSavings)
+                .categoryBudgets(categoryBudgets)
+                .build();
     }
 
-    public Object modifyBudgetPlan(@Valid BudgetModifyRequestDto budgetModifyRequestDto) {
+    // 예산 계획 수정
+    public void modifyBudgetPlan(BudgetModifyRequestDto requestDto) {
+        User user = userService.getCurrentUser();
+        LocalDate startOfMonth = LocalDate.of(requestDto.year(), requestDto.month(), 1);
+
+        // 1. 월 예산 수정
+        MonthlyBudget monthlyBudget = monthlyBudgetService.getMonthlyBudget(user, startOfMonth);
+        monthlyBudget.updateAmount(requestDto.monthlyBudgetAmount());
+
+        // 2. 기존 카테고리별 예산 가져오기
+        List<CategoryBudget> existingCategoryBudgets = categoryBudgetService.findByMonthlyBudget(monthlyBudget);
+        Map<ExpenseCategory, CategoryBudget> categoryBudgetMap = existingCategoryBudgets.stream()
+                .collect(Collectors.toMap(CategoryBudget::getExpenseCategory, budget -> budget));
+
+        // 3. 새로운 카테고리 예산 요청 처리
+        for (CategoryBudgetSimpleUnitDto newBudgetDto : requestDto.categoryBudgets()) {
+            CategoryBudget existingBudget = categoryBudgetMap.get(newBudgetDto.expenseCategory());
+            if (existingBudget != null) {
+                // 기존 카테고리 예산이 존재하면 업데이트
+                existingBudget.updateAmount(newBudgetDto.amount());
+            } else {
+                throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
+            }
+        }
     }
+
 }

@@ -1,10 +1,11 @@
 package tamtam.mooney.domain.budget.dto;
 
+import tamtam.mooney.domain.transaction.entity.ExpenseCategory;
+
 public record CategoryBudgetProgressUnitDto(
-        String icon,
-        String categoryName,
-        long amount,
-        long spent,
+        ExpenseCategory expenseCategory,
+        long budgetAmount,
+        long spentAmount,
         int spentPercentage,
-        long remaining
+        long remainingAmount
 ) {}

@@ -7,10 +7,8 @@ import tamtam.mooney.domain.transaction.dto.ScheduledTransactionResponseDto;
 import tamtam.mooney.domain.transaction.entity.ScheduledTransaction;
 import tamtam.mooney.domain.transaction.repository.ScheduledTransactionRepository;
 import tamtam.mooney.domain.user.entity.User;
-import tamtam.mooney.domain.user.service.UserService;
 
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,23 +19,30 @@ public class ScheduledTransactionService {
 
     private final ScheduledTransactionRepository scheduledTransactionRepository;
 
-    // 특정 월의 모든 ScheduledTransaction 정보를 조회
+//    // ScheduledTransactionResponseDto 응딥
+//    @Transactional(readOnly = true)
+//    public List<ScheduledTransactionResponseDto> getScheduledTransactionResponseDtoByMonth(User user, LocalDate startOfMonth, LocalDate endOfMonth) {
+//        List<ScheduledTransaction> scheduledTransactions = getScheduledTransactionsByMonth(user, startOfMonth, endOfMonth);
+//        return scheduledTransactions.stream()
+//                .map(ScheduledTransactionResponseDto::from)
+//                .collect(Collectors.toList());
+//    }
+
+    // 특정 월의 지출+저축 ScheduledTransaction 조회
     @Transactional(readOnly = true)
-    public List<ScheduledTransactionResponseDto> getScheduledTransactionsByMonth(User user, int year, int month) {
-        LocalDate startOfMonth = YearMonth.of(year, month).atDay(1);
-        LocalDate endOfMonth = YearMonth.of(year, month).atEndOfMonth();
-
-        List<ScheduledTransaction> scheduledTransactions = scheduledTransactionRepository.findByUserAndScheduledDateBetween(user, startOfMonth, endOfMonth);
-
-        return scheduledTransactions.stream()
-                .map(ScheduledTransactionResponseDto::from)
-                .collect(Collectors.toList());
+    public List<ScheduledTransaction> getScheduledExpensesByMonth(User user, LocalDate startOfMonth, LocalDate endOfMonth) {
+        return scheduledTransactionRepository.findByUserAndScheduledDateBetweenAndTransactionType(user, startOfMonth, endOfMonth, "EXPENSE");
     }
 
+    // 특정 월의 모든 ScheduledTransaction 조회
     @Transactional(readOnly = true)
-    public Long getTotalPendingScheduledTransactionAmountByMonth(User user, int year, int month) {
-        LocalDate startOfMonth = YearMonth.of(year, month).atDay(1);
-        LocalDate endOfMonth = YearMonth.of(year, month).atEndOfMonth();
+    public List<ScheduledTransaction> getScheduledTransactionsByMonth(User user, LocalDate startOfMonth, LocalDate endOfMonth) {
+        return scheduledTransactionRepository.findByUserAndScheduledDateBetween(user, startOfMonth, endOfMonth);
+    }
+
+    // 특정 월의 예정된 ScheduledTransaction 조회
+    @Transactional(readOnly = true)
+    public Long getTotalPendingScheduledTransactionAmountByMonth(User user, LocalDate startOfMonth, LocalDate endOfMonth) {
         return scheduledTransactionRepository.getTotalAmountByUserAndTransactionIsNullAndScheduledDateBetween(user, startOfMonth, endOfMonth);
     }
 

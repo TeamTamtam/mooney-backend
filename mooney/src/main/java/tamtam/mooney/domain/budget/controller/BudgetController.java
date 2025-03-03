@@ -25,8 +25,8 @@ public class BudgetController {
 
     @Operation(summary = "첫 예산 수립")
     @PostMapping("/first-budget")
-    public ResponseEntity<?> saveFirstBudget(@RequestBody @Valid FirstBudgetRequestDto firstBudgetRequestDto) {
-        budgetService.saveFirstBudget(firstBudgetRequestDto);
+    public ResponseEntity<?> saveFirstBudget(@RequestBody @Valid FirstBudgetRequestDto requestDto) {
+        budgetService.saveFirstBudget(requestDto);
         return ResponseEntity.ok().build();
     }
 
@@ -47,7 +47,8 @@ public class BudgetController {
 
     @Operation(summary = "특정 월의 예산 계획 수정")
     @PatchMapping("/plan")
-    public ResponseEntity<?> modifyBudgetPlan(@RequestBody @Valid BudgetModifyRequestDto budgetModifyRequestDto) {
-        return ResponseEntity.ok(budgetService.modifyBudgetPlan(budgetModifyRequestDto));
+    public ResponseEntity<?> modifyBudgetPlan(@RequestBody @Valid BudgetModifyRequestDto requestDto) {
+        budgetService.modifyBudgetPlan(requestDto);
+        return ResponseEntity.ok().build();
     }
 }

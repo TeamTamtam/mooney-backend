@@ -32,4 +32,5 @@ public interface ScheduledTransactionRepository extends JpaRepository<ScheduledT
             @Param("startOfMonth") LocalDate startOfMonth,
             @Param("endOfMonth") LocalDate endOfMonth);
 
+    List<ScheduledTransaction> findByUserAndScheduledDateBetweenAndTransactionType(User user, LocalDate startOfMonth, LocalDate endOfMonth, String transactionType);
 }

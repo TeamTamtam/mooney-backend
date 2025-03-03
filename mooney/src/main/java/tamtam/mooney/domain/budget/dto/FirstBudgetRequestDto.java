@@ -14,5 +14,5 @@ public record FirstBudgetRequestDto(
         LocalDate monthDate,
         @NotNull
         Long monthlyBudgetAmount,
-        List<CategoryBudgetDto> categoryBudgets
+        List<CategoryBudgetSimpleUnitDto> categoryBudgets
 ) {}
