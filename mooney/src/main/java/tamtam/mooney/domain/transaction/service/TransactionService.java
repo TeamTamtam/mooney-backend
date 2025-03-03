@@ -66,10 +66,10 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public Long getTotalExpenseForCategory(User user, ExpenseCategory expenseCategory, LocalDate startDate, LocalDate endDate) {
+    public Map<ExpenseCategory, Long> mapTotalExpenseForAllCategories(User user, LocalDate startDate, LocalDate endDate) {
         LocalDateTime startOfMonth = startDate.atStartOfDay();
         LocalDateTime endOfMonth = endDate.atTime(23, 59, 59);
-        return expenseRepository.getTotalExpenseForCategory(user, expenseCategory, startOfMonth, endOfMonth);
+        return expenseRepository.getTotalExpenseForAllCategories(user, startOfMonth, endOfMonth);
     }
 
     @Transactional(readOnly = true)

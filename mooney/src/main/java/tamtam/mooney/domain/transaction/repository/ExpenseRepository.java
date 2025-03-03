@@ -9,17 +9,18 @@ import tamtam.mooney.domain.user.entity.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 public interface ExpenseRepository extends JpaRepository<Expense, Long> {
-    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e " +
-            "WHERE e.user = :user " +
-            "AND e.expenseCategory = :expenseCategory " +
-            "AND e.transactionTime BETWEEN :startOfMonth AND :endOfMonth")
-    Long getTotalExpenseForCategory(
+    @Query("SELECT e.expenseCategory, COALESCE(SUM(t.amount), 0) FROM Expense e " +
+            "JOIN Transaction t ON e.transactionId = t.transactionId " +
+            "WHERE t.user = :user AND t.transactionTime BETWEEN :startOfMonth AND :endOfMonth " +
+            "GROUP BY e.expenseCategory")
+    Map<ExpenseCategory, Long> getTotalExpenseForAllCategories(
             @Param("user") User user,
-            @Param("expenseCategory") ExpenseCategory expenseCategory,
             @Param("startOfMonth") LocalDateTime startOfMonth,
-            @Param("endOfMonth") LocalDateTime endOfMonth);
+            @Param("endOfMonth") LocalDateTime endOfMonth
+    );
 
     // 최근 지출 내역 조회 (최대 limit개)
     @Query("SELECT e FROM Expense e WHERE e.user = :user ORDER BY e.transactionTime DESC LIMIT :limit")

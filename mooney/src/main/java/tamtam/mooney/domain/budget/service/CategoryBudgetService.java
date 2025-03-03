@@ -14,10 +14,8 @@ import tamtam.mooney.domain.transaction.service.TransactionService;
 import tamtam.mooney.domain.user.entity.User;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -28,24 +26,10 @@ public class CategoryBudgetService {
     private final TransactionService transactionService;
 
     public void saveCategoryBudgets(MonthlyBudget monthlyBudget, List<CategoryBudgetSimpleUnitDto> categoryBudgets) {
-        Optional.ofNullable(categoryBudgets)
-                .filter(list -> !list.isEmpty())
-                .ifPresent(list -> {
-                    // 요청된 카테고리 예산을 맵으로 변환
-                    Map<ExpenseCategory, Long> categoryBudgetMap = list.stream()
-                            .collect(Collectors.toMap(CategoryBudgetSimpleUnitDto::expenseCategory, CategoryBudgetSimpleUnitDto::amount));
-
-                    // 모든 ExpenseCategory를 순회하며 예산 저장
-                    List<CategoryBudget> categoryBudgetList = Arrays.stream(ExpenseCategory.values())
-                            .map(ec -> CategoryBudget.builder()
-                                    .monthlyBudget(monthlyBudget)
-                                    .expenseCategory(ec)
-                                    .amount(categoryBudgetMap.getOrDefault(ec, 0L))
-                                    .build())
-                            .collect(Collectors.toList());
-
-                    categoryBudgetRepository.saveAll(categoryBudgetList);
-                });
+        List<CategoryBudget> budgetList = categoryBudgets.stream()
+                .map(dto -> new CategoryBudget(monthlyBudget, dto.expenseCategory(), dto.amount()))
+                .toList();
+        categoryBudgetRepository.saveAll(budgetList); // Batch insert 사용
     }
 
     @Transactional(readOnly = true)
@@ -58,13 +42,15 @@ public class CategoryBudgetService {
         // 요청된 월의 카테고리별 예산 조회
         List<CategoryBudget> budgets = findByMonthlyBudget(monthlyBudget);
 
+        // 특정 기간 동안의 모든 카테고리별 총 지출
+        Map<ExpenseCategory, Long> totalExpensesByCategory = transactionService.mapTotalExpenseForAllCategories(user, startOfMonth, endOfMonth);
+
         // 각 카테고리의 실제 지출 계산
         return budgets.stream()
                 .map(cb -> {
-                    Long spent = transactionService.getTotalExpenseForCategory(user, cb.getExpenseCategory(), startOfMonth, endOfMonth);
-                    int spentPercentage = (int) ((spent * 100.0) / cb.getAmount());
-                    long remaining = cb.getAmount() - spent;
-                    remaining = Math.max(remaining, 0);
+                    Long spent = totalExpensesByCategory.getOrDefault(cb.getExpenseCategory(), 0L);
+                    int spentPercentage = cb.getAmount() > 0 ? (int) ((spent * 100.0) / cb.getAmount()) : 0;
+                    long remaining = Math.max(cb.getAmount() - spent, 0);
 
                     return new CategoryBudgetProgressUnitDto(
                             cb.getExpenseCategory(),
@@ -76,6 +62,7 @@ public class CategoryBudgetService {
                 }).collect(Collectors.toList());
     }
 
+
     @Transactional(readOnly = true)
     public List<CategoryBudgetPlanUnitDto> getCategoryBudgetPlans(User user, MonthlyBudget monthlyBudget, LocalDate startOfMonth) {
         // 지난달의 시작일과 종료일 계산
@@ -85,17 +72,16 @@ public class CategoryBudgetService {
         // 요청된 월의 카테고리별 예산 조회
         List<CategoryBudget> budgets = findByMonthlyBudget(monthlyBudget);
 
-        // 각 카테고리의 지난달 지출과 이번달 예산을 조회
-        return budgets.stream()
-                .map(cb -> {
-                    long lastMonthExpenseAmount = transactionService.getTotalExpenseForCategory(user, cb.getExpenseCategory(), lastMonthStart, lastMonthEnd);
+        // 지난달 모든 카테고리의 총 지출
+        Map<ExpenseCategory, Long> lastMonthExpensesByCategory = transactionService.mapTotalExpenseForAllCategories(user, lastMonthStart, lastMonthEnd);
 
-                    return new CategoryBudgetPlanUnitDto(
-                            cb.getCategoryBudgetId(),
-                            cb.getExpenseCategory(),
-                            lastMonthExpenseAmount,
-                            cb.getAmount()
-                    );
-                }).collect(Collectors.toList());
+        // 각 카테고리별 예산 계획 생성
+        return budgets.stream()
+                .map(cb -> new CategoryBudgetPlanUnitDto(
+                        cb.getCategoryBudgetId(),
+                        cb.getExpenseCategory(),
+                        lastMonthExpensesByCategory.getOrDefault(cb.getExpenseCategory(), 0L),
+                        cb.getAmount()
+                )).collect(Collectors.toList());
     }
 }
