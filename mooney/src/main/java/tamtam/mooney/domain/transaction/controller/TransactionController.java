@@ -50,7 +50,7 @@ public class TransactionController {
 
     @Operation(summary = "특정 월의 수입 및 지출 내역 조회")
     @GetMapping("/monthly")
-    public ResponseEntity<MonthlyTransactionResponseDto> getTransactionsByMonth(@RequestParam @NotNull @Min(1900) int year,
+    public ResponseEntity<MonthlyTransactionResponseDto> getTransactionsByMonth(@RequestParam @NotNull @Min(2024) int year,
                                                                                 @RequestParam @NotNull @Min(1) @Max(12) int month) {
         return ResponseEntity.ok(transactionService.getTransactionsByMonth(year, month));
     }

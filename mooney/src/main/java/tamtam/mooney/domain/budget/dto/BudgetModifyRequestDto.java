@@ -9,7 +9,7 @@ import java.util.List;
 
 @Builder
 public record BudgetModifyRequestDto (
-        @Min(1900)
+        @Min(2024)
         int year,
         @Min(1) @Max(12)
         int month,
