@@ -11,28 +11,46 @@ import java.util.List;
 
 public interface ScheduledTransactionRepository extends JpaRepository<ScheduledTransaction, Long> {
 
-    // 특정 사용자의 해당 월 고정 트랜잭션 조회
+    // 특정 사용자의 해당 월 스케줄된 트랜잭션 조회 (최적화: WHERE 절 필터링)
     @Query("SELECT s FROM ScheduledTransaction s " +
-            "WHERE s.user = :user AND s.scheduledDate BETWEEN :startOfMonth AND :endOfMonth")
+            "WHERE s.user = :user " +
+            "AND s.scheduledDate BETWEEN :startOfMonth AND :endOfMonth")
     List<ScheduledTransaction> getScheduledTransactionsForMonth(
             @Param("user") User user,
             @Param("startOfMonth") LocalDate startOfMonth,
             @Param("endOfMonth") LocalDate endOfMonth
     );
 
-    // 특정 월의 아직 발생하지 않은 ScheduledTransaction 합계 금액 조회 (transaction이 null이고, scheduledDate이 해당 월 내인 경우)
-    @Query("SELECT COALESCE(SUM(s.amount), 0) FROM ScheduledTransaction s WHERE s.user = :user AND s.transaction IS NULL AND s.scheduledDate BETWEEN :startOfMonth AND :endOfMonth")
-    Long getTotalAmountByUserAndTransactionIsNullAndScheduledDateBetween(
+    // 아직 발생하지 않은 스케줄된 트랜잭션 합계 금액 조회 (최적화: IS NULL을 WHERE에 포함)
+    @Query("SELECT COALESCE(SUM(s.amount), 0) FROM ScheduledTransaction s " +
+            "WHERE s.user = :user " +
+            "AND s.transaction IS NULL " +
+            "AND s.scheduledDate BETWEEN :startOfMonth AND :endOfMonth")
+    Long getPendingScheduledTransactionAmountForMonth(
             @Param("user") User user,
             @Param("startOfMonth") LocalDate startOfMonth,
-            @Param("endOfMonth") LocalDate endOfMonth);
+            @Param("endOfMonth") LocalDate endOfMonth
+    );
 
-    // 특정 월의 전체 ScheduledTransaction 합계 금액 조회
-    @Query("SELECT COALESCE(SUM(s.amount), 0) FROM ScheduledTransaction s WHERE s.user = :user AND s.scheduledDate BETWEEN :startOfMonth AND :endOfMonth")
-    Long getTotalAmountByUserAndScheduledDateBetween(
+    // 전체 스케줄된 트랜잭션 합계 조회 (WHERE 절 필터링 적용)
+    @Query("SELECT COALESCE(SUM(s.amount), 0) FROM ScheduledTransaction s " +
+            "WHERE s.user = :user " +
+            "AND s.scheduledDate BETWEEN :startOfMonth AND :endOfMonth")
+    Long getTotalScheduledTransactionAmountForMonth(
             @Param("user") User user,
             @Param("startOfMonth") LocalDate startOfMonth,
-            @Param("endOfMonth") LocalDate endOfMonth);
+            @Param("endOfMonth") LocalDate endOfMonth
+    );
 
-    List<ScheduledTransaction> findByUserAndScheduledDateBetweenAndTransactionType(User user, LocalDate startOfMonth, LocalDate endOfMonth, String transactionType);
+    // 특정 월의 트랜잭션 유형에 따른 스케줄된 트랜잭션 조회
+    @Query("SELECT s FROM ScheduledTransaction s " +
+            "WHERE s.user = :user " +
+            "AND s.scheduledDate BETWEEN :startOfMonth AND :endOfMonth " +
+            "AND s.transactionType = :transactionType")
+    List<ScheduledTransaction> getScheduledTransactionsByTypeForMonth(
+            @Param("user") User user,
+            @Param("startOfMonth") LocalDate startOfMonth,
+            @Param("endOfMonth") LocalDate endOfMonth,
+            @Param("transactionType") String transactionType
+    );
 }

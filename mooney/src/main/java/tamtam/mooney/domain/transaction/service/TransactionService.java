@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.domain.transaction.dto.*;
 import tamtam.mooney.domain.transaction.entity.Expense;
-import tamtam.mooney.domain.transaction.entity.ExpenseCategory;
 import tamtam.mooney.domain.transaction.entity.Income;
 import tamtam.mooney.domain.transaction.entity.Transaction;
 import tamtam.mooney.domain.transaction.repository.ExpenseRepository;
@@ -66,7 +65,7 @@ public class TransactionService {
     }
 
     @Transactional(readOnly = true)
-    public Map<ExpenseCategory, Long> mapTotalExpenseForAllCategories(User user, LocalDate startDate, LocalDate endDate) {
+    public Map<String, Long> mapTotalExpenseForAllCategories(User user, LocalDate startDate, LocalDate endDate) {
         LocalDateTime startOfMonth = startDate.atStartOfDay();
         LocalDateTime endOfMonth = endDate.atTime(23, 59, 59);
         return expenseRepository.getTotalExpenseForAllCategories(user, startOfMonth, endOfMonth);
