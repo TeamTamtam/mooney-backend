@@ -11,12 +11,9 @@ public record ExpenseAddRequestDto(
         Long amount,
         @NotNull(message = "Transaction time is required")
         LocalDateTime transactionTime,
-
         String transactionSource,
         String sourceApp,
-
-        String payee,
-        String paymentMethod
+        String payee
 ) {
     public ExpenseAddRequestDto {
         // 금액 검증 (0 이상이어야 함)

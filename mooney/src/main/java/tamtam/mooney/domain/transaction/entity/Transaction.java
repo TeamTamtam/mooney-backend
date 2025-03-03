@@ -12,12 +12,16 @@ import java.time.LocalDateTime;
 
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@MappedSuperclass
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED) // 상속 전략 설정
+@DiscriminatorColumn(name = "transaction_type") // 구분 컬럼 추가
 public abstract class Transaction extends BaseTimeEntity {
 
-    @NotNull
-    @Column(nullable = false)
-    private Long amount;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long transactionId;
+
+    private long amount;
 
     @NotNull
     @Column(nullable = false)
@@ -40,7 +44,7 @@ public abstract class Transaction extends BaseTimeEntity {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private User user;
 
-    public Transaction(Long amount, LocalDateTime transactionTime, String transactionSource,
+    public Transaction(long amount, LocalDateTime transactionTime, String transactionSource,
                        String sourceApp, User user) {
         this.amount = amount;
         this.transactionTime = transactionTime;
@@ -53,11 +57,7 @@ public abstract class Transaction extends BaseTimeEntity {
         this.recurringTransaction = recurringTransaction;
     }
 
-    public void updateAmount(Long newAmount) {
-        if (newAmount == null || newAmount < 0) {
-            this.amount = 0L;
-        } else {
-            this.amount = newAmount;
-        }
+    public void updateAmount(long newAmount) {
+        this.amount = (newAmount < 0) ? 0L : newAmount;
     }
 }

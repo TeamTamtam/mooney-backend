@@ -36,7 +36,7 @@ public class AgentController {
 
     @Operation(summary = "활성화 Agent 변경", description = "사용자가 보유한 Agent를 활성화합니다.")
     @PostMapping("/activate/{userAgentId}")
-    public ResponseEntity<Void> activateUserAgent(@PathVariable @NotNull Long userAgentId) {
+    public ResponseEntity<Void> activateUserAgent(@PathVariable Long userAgentId) {
         userAgentService.activateUserAgent(userAgentId);
         return ResponseEntity.ok().build();
     }

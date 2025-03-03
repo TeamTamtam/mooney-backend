@@ -7,6 +7,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import tamtam.mooney.domain.user.dto.UserHomeResponseDto;
+import tamtam.mooney.domain.user.dto.UserSettingsResponseDto;
+import tamtam.mooney.domain.user.service.UserHomeService;
 import tamtam.mooney.domain.user.service.UserService;
 
 
@@ -16,16 +19,23 @@ import tamtam.mooney.domain.user.service.UserService;
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
+    private final UserHomeService userHomeService;
 
     @Operation(summary = "유저 닉네임 조회")
     @GetMapping("/nickname")
-    public ResponseEntity<?> getUserInfo() {
+    public ResponseEntity<String> getUserInfo() {
         return ResponseEntity.ok().body(userService.getCurrentUserNickname());
     }
 
     @Operation(summary = "설정에서 유저 정보 조회")
     @GetMapping("/settings")
-    public ResponseEntity<?> getUserSettingsInfo() {
+    public ResponseEntity<UserSettingsResponseDto> getUserSettingsInfo() {
         return ResponseEntity.ok().body(userService.getUserSettingsInfo());
+    }
+
+    @Operation(summary = "홈  정보 조회")
+    @GetMapping("/home")
+    public ResponseEntity<UserHomeResponseDto> getHomeInfo() {
+        return ResponseEntity.ok().body(userHomeService.getHomeInfo());
     }
 }

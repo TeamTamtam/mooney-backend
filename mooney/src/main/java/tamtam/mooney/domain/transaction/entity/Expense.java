@@ -10,26 +10,19 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@DiscriminatorValue("EXPENSE") // 구분자 추가 (Joined Table 전략)
 public class Expense extends Transaction {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(updatable = false)
-    private Long expenseId;
-
     private String payee;
-
-    private String paymentMethod;
 
     @NotNull
     private ExpenseCategory expenseCategory;
 
     @Builder
-    public Expense(String payee, String paymentMethod, ExpenseCategory expenseCategory,
-                   Long amount, LocalDateTime transactionDate, String transactionSource, String sourceApp, User user) {
-        super(amount, transactionDate, transactionSource, sourceApp, user);
+    public Expense(String payee, ExpenseCategory expenseCategory,
+                   long amount, LocalDateTime transactionTime, String transactionSource, String sourceApp, User user) {
+        super(amount, transactionTime, transactionSource, sourceApp, user);
         this.payee = payee;
-        this.paymentMethod = paymentMethod;
         this.expenseCategory = expenseCategory;
     }
 
