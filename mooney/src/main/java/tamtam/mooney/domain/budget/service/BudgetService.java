@@ -38,15 +38,49 @@ public class BudgetService {
     // 첫 예산 수립
     public void saveFirstBudget(FirstBudgetRequestDto requestDto) {
         User user = userService.getCurrentUser();
-        // 월 예산 저장
-        MonthlyBudget monthlyBudget = MonthlyBudget.builder().user(user).monthDate(requestDto.monthDate()).amount(requestDto.monthlyBudgetAmount()).build();
-        monthlyBudgetRepository.save(monthlyBudget);
+        MonthlyBudget monthlyBudget = saveOrUpdateBudget(user, requestDto.year(), requestDto.month(), requestDto.monthlyBudgetAmount());
+
         // 고정 수입, 지출, 저축 저장
         recurringTransactionService.saveRecurringTransactions(user, requestDto.fixedIncome(), "INCOME");
         recurringTransactionService.saveRecurringTransactions(user, requestDto.fixedExpense(), "EXPENSE");
         recurringTransactionService.saveRecurringTransactions(user, requestDto.fixedSavings(), "SAVINGS");
+
         // 카테고리별 예산 저장
         categoryBudgetService.saveCategoryBudgets(monthlyBudget, requestDto.categoryBudgets());
+    }
+
+    // 다음달 예산 수립
+//    public void saveNextMonthBudget(NextMonthBudgetRequestDto requestDto) {
+//        User user = userService.getCurrentUser();
+//        MonthlyBudget monthlyBudget = saveOrUpdateBudget(user, requestDto.year(), requestDto.month(), requestDto.monthlyBudgetAmount());
+//
+//        // 기존 고정 수입/지출/저축을 유지하면서 업데이트
+//        recurringTransactionService.updateRecurringTransactions(user, requestDto.fixedIncome(), "INCOME");
+//        recurringTransactionService.updateRecurringTransactions(user, requestDto.fixedExpense(), "EXPENSE");
+//        recurringTransactionService.updateRecurringTransactions(user, requestDto.fixedSavings(), "SAVINGS");
+//
+//        // 카테고리별 예산 수정
+//        categoryBudgetService.updateCategoryBudgets(monthlyBudget, requestDto.categoryBudgets());
+//    }
+
+    // 예산 수립
+    public MonthlyBudget saveOrUpdateBudget(User user, int year, int month, long monthlyBudgetAmount) {
+        LocalDate startOfMonth = LocalDate.of(year, month, 1);
+
+        // 기존 예산 존재 여부 확인 후 업데이트 또는 새로 저장
+        return monthlyBudgetRepository.findByUserAndMonthDate(user, startOfMonth)
+                .map(existingBudget -> {
+                    existingBudget.updateAmount(monthlyBudgetAmount);
+                    return existingBudget;
+                })
+                .orElseGet(() -> {
+                    MonthlyBudget newBudget = MonthlyBudget.builder()
+                            .user(user)
+                            .monthDate(startOfMonth)
+                            .amount(monthlyBudgetAmount)
+                            .build();
+                    return monthlyBudgetRepository.save(newBudget);
+                });
     }
 
     @Transactional(readOnly = true)

@@ -30,14 +30,6 @@ public class BudgetController {
         return ResponseEntity.ok().build();
     }
 
-    @Operation(summary = "특정 월의 예산 진행 조회")
-    @GetMapping("/progress")
-    public ResponseEntity<BudgetProgressResponseDto> getBudgetProgress(@RequestParam @NotNull @Min(1900) int year,
-                                                                       @RequestParam @NotNull @Min(1) @Max(12) int month,
-                                                                       @RequestParam @NotNull LocalDate today) {
-        return ResponseEntity.ok(budgetService.getBudgetProgress(year, month, today));
-    }
-
     @Operation(summary = "특정 월의 예산 계획 조회")
     @GetMapping("/plan")
     public ResponseEntity<?> getBudgetPlan(@RequestParam @NotNull @Min(1900) int year,
@@ -50,5 +42,13 @@ public class BudgetController {
     public ResponseEntity<?> modifyBudgetPlan(@RequestBody @Valid BudgetModifyRequestDto requestDto) {
         budgetService.modifyBudgetPlan(requestDto);
         return ResponseEntity.ok().build();
+    }
+
+    @Operation(summary = "특정 월의 예산 진행 조회")
+    @GetMapping("/progress")
+    public ResponseEntity<BudgetProgressResponseDto> getBudgetProgress(@RequestParam @NotNull @Min(1900) int year,
+                                                                       @RequestParam @NotNull @Min(1) @Max(12) int month,
+                                                                       @RequestParam @NotNull LocalDate today) {
+        return ResponseEntity.ok(budgetService.getBudgetProgress(year, month, today));
     }
 }

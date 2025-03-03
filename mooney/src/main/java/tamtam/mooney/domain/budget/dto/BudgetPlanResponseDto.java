@@ -7,7 +7,6 @@ import java.util.List;
 
 @Builder
 public record BudgetPlanResponseDto (
-        @NotNull
         Long monthlyBudgetAmount,
         List<BudgetPlanRecurringTransactionUnitDto> fixedExpense,
         List<BudgetPlanRecurringTransactionUnitDto> fixedSavings,
