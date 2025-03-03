@@ -4,7 +4,7 @@ import lombok.Builder;
 import java.time.LocalDate;
 
 @Builder
-public record DailySummaryResponseDto(
+public record DailyTransactionSummaryDto(
         LocalDate date,
         Long totalIncomeAmount,
         Long totalExpenseAmount

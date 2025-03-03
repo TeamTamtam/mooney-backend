@@ -11,10 +11,8 @@ public record IncomeAddRequestDto(
         Long amount,
         @NotNull(message = "Transaction time is required")
         LocalDateTime transactionTime,
-
         String transactionSource,
         String sourceApp,
-
         String payer
 ) {
     public IncomeAddRequestDto {

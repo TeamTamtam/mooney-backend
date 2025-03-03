@@ -3,11 +3,13 @@ package tamtam.mooney.domain.transaction.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tamtam.mooney.domain.transaction.dto.DailyTransactionResponseDto;
+import tamtam.mooney.domain.transaction.dto.MonthlyTransactionDayUnitDto;
 import tamtam.mooney.domain.transaction.dto.ExpenseAddRequestDto;
 import tamtam.mooney.domain.transaction.dto.IncomeAddRequestDto;
 import tamtam.mooney.domain.transaction.dto.MonthlyTransactionResponseDto;
@@ -42,14 +44,14 @@ public class TransactionController {
 
     @Operation(summary = "특정 날짜의 수입 및 지출 내역 조회")
     @GetMapping("/daily")
-    public ResponseEntity<DailyTransactionResponseDto> getTransactionsByDate(@RequestParam("date") @NotNull LocalDate date) {
+    public ResponseEntity<MonthlyTransactionDayUnitDto> getTransactionsByDate(@RequestParam @NotNull LocalDate date) {
         return ResponseEntity.ok(transactionService.getTransactionsByDate(date));
     }
 
-    @Operation(summary = "특정 연도와 월의 수입 및 지출 내역 조회")
+    @Operation(summary = "특정 월의 수입 및 지출 내역 조회")
     @GetMapping("/monthly")
-    public ResponseEntity<MonthlyTransactionResponseDto> getTransactionsByMonth(@RequestParam("year") @NotNull int year,
-                                                                                @RequestParam("month") @NotNull int month) {
+    public ResponseEntity<MonthlyTransactionResponseDto> getTransactionsByMonth(@RequestParam @NotNull @Min(1900) int year,
+                                                                                @RequestParam @NotNull @Min(1) @Max(12) int month) {
         return ResponseEntity.ok(transactionService.getTransactionsByMonth(year, month));
     }
 }

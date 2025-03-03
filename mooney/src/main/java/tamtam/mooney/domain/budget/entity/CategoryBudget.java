@@ -20,7 +20,7 @@ public class CategoryBudget extends BaseTimeEntity {
 
     @NotNull
     @Column(nullable = false)
-    private Long amount;
+    private long amount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "monthly_budget_id", nullable = false, updatable = false)
@@ -32,17 +32,13 @@ public class CategoryBudget extends BaseTimeEntity {
     private ExpenseCategory expenseCategory;
 
     @Builder
-    public CategoryBudget(MonthlyBudget monthlyBudget, ExpenseCategory expenseCategory, Long amount) {
+    public CategoryBudget(MonthlyBudget monthlyBudget, ExpenseCategory expenseCategory, long amount) {
         this.monthlyBudget = monthlyBudget;
         this.expenseCategory = expenseCategory;
         this.amount = amount;
     }
 
-    public void updateAmount(Long newAmount) {
-        if (newAmount == null || newAmount < 0) {
-            this.amount = 0L;
-        } else {
-            this.amount = newAmount;
-        }
+    public void updateAmount(long newAmount) {
+        this.amount = (newAmount < 0) ? 0L : newAmount;
     }
 }
