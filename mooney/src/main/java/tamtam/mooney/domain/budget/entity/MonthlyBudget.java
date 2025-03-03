@@ -26,7 +26,7 @@ public class MonthlyBudget extends BaseTimeEntity {
 
     @NotNull
     @Column(nullable = false)
-    private Long amount;
+    private long amount;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
@@ -35,18 +35,14 @@ public class MonthlyBudget extends BaseTimeEntity {
     private User user;
 
     @Builder
-    public MonthlyBudget(Long monthlyBudgetId, User user, LocalDate monthDate, Long amount) {
+    public MonthlyBudget(Long monthlyBudgetId, User user, LocalDate monthDate, long amount) {
         this.monthlyBudgetId = monthlyBudgetId;
         this.user = user;
         this.monthDate = monthDate;
         this.amount = amount;
     }
 
-    public void updateAmount(Long newAmount) {
-        if (newAmount == null || newAmount < 0) {
-            this.amount = 0L;
-        } else {
-            this.amount = newAmount;
-        }
+    public void updateAmount(long newAmount) {
+        this.amount = (newAmount < 0) ? 0L : newAmount;
     }
 }

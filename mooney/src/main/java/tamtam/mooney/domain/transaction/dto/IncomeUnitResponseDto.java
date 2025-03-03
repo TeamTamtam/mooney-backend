@@ -6,8 +6,8 @@ import java.time.LocalDateTime;
 
 @Builder
 public record IncomeUnitResponseDto(
-        Long incomeId,
-        Long amount,
+        long transactionId,
+        long amount,
         LocalDateTime transactionTime,
         String transactionSource,
         String note

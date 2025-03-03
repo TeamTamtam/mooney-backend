@@ -5,113 +5,119 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.domain.transaction.dto.*;
 import tamtam.mooney.domain.transaction.entity.Expense;
+import tamtam.mooney.domain.transaction.entity.ExpenseCategory;
 import tamtam.mooney.domain.transaction.entity.Income;
+import tamtam.mooney.domain.transaction.entity.Transaction;
 import tamtam.mooney.domain.transaction.repository.ExpenseRepository;
-import tamtam.mooney.domain.transaction.repository.IncomeRepository;
+import tamtam.mooney.domain.transaction.repository.TransactionRepository;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.service.UserService;
 
 import java.time.LocalDate;
-import java.time.YearMonth;
+import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class TransactionService {
 
+    private final TransactionRepository transactionRepository;
     private final ExpenseRepository expenseRepository;
-    private final IncomeRepository incomeRepository;
     private final UserService userService;
 
     @Transactional(readOnly = true)
-    public DailyTransactionResponseDto getTransactionsByDate(LocalDate date) {
+    public MonthlyTransactionDayUnitDto getTransactionsByDate(LocalDate date) {
         User user = userService.getCurrentUser();
 
-        // 특정 날짜의 수입 및 지출 데이터 가져오기
-        List<ExpenseUnitResponseDto> expenses = expenseRepository.findByUserAndTransactionTimeBetween(
-                        user, date.atStartOfDay(), date.plusDays(1).atStartOfDay())
-                .stream()
-                .sorted(Comparator.comparing(Expense::getTransactionTime))
-                .map(expense -> ExpenseUnitResponseDto.builder()
-                        .expenseId(expense.getExpenseId())
-                        .amount(expense.getAmount())
-                        .transactionTime(expense.getTransactionTime())
-                        .expenseCategory(expense.getExpenseCategory())
-                        .transactionSource(expense.getTransactionSource())
-                        .note(expense.getNote())
-                        .build())
-                .toList();
-        List<IncomeUnitResponseDto> incomes = incomeRepository.findByUserAndTransactionTimeBetween(
-                        user, date.atStartOfDay(), date.plusDays(1).atStartOfDay())
-                .stream()
-                .sorted(Comparator.comparing(Income::getTransactionTime))
-                .map(income -> IncomeUnitResponseDto.builder()
-                        .incomeId(income.getIncomeId())
-                        .amount(income.getAmount())
-                        .transactionTime(income.getTransactionTime())
-                        .transactionSource(income.getTransactionSource())
-                        .note(income.getNote())
-                        .build())
-                .toList();
+        // 특정 날짜의 Transactions(Expense와 Income) 모두 조회
+        List<Transaction> transactions = transactionRepository.findByUserAndTransactionTimeBetweenOrderByTransactionTime(
+                user, date.atStartOfDay(), date.plusDays(1).atStartOfDay());
 
-        // 총 지출, 총 수입
-        Long totalExpenseAmount = expenses.stream()
-                .mapToLong(ExpenseUnitResponseDto::amount)
-                .sum();
-        Long totalIncomeAmount = incomes.stream()
-                .mapToLong(IncomeUnitResponseDto::amount)
-                .sum();
+        List<ExpenseUnitResponseDto> expenses = new ArrayList<>();
+        List<IncomeUnitResponseDto> incomes = new ArrayList<>();
+        long totalExpenseAmount = 0L;
+        long totalIncomeAmount = 0L;
 
-        return DailyTransactionResponseDto.from(date, totalIncomeAmount, totalExpenseAmount, expenses, incomes);
+        for (Transaction transaction : transactions) {
+            if (transaction instanceof Expense expense) {
+                expenses.add(new ExpenseUnitResponseDto(
+                        expense.getTransactionId(),
+                        expense.getAmount(),
+                        expense.getTransactionTime(),
+                        expense.getExpenseCategory(),
+                        expense.getTransactionSource(),
+                        expense.getNote()
+                ));
+                totalExpenseAmount += expense.getAmount();
+            } else if (transaction instanceof Income income) {
+                incomes.add(new IncomeUnitResponseDto(
+                        income.getTransactionId(),
+                        income.getAmount(),
+                        income.getTransactionTime(),
+                        income.getTransactionSource(),
+                        income.getNote()
+                ));
+                totalIncomeAmount += income.getAmount();
+            }
+        }
+
+        return MonthlyTransactionDayUnitDto.from(date, totalIncomeAmount, totalExpenseAmount, expenses, incomes);
+    }
+
+    @Transactional(readOnly = true)
+    public Long getTotalExpenseForCategory(User user, ExpenseCategory expenseCategory, LocalDate startDate, LocalDate endDate) {
+        LocalDateTime startOfMonth = startDate.atStartOfDay();
+        LocalDateTime endOfMonth = endDate.atTime(23, 59, 59);
+        return expenseRepository.getTotalExpenseForCategory(user, expenseCategory, startOfMonth, endOfMonth);
     }
 
     @Transactional(readOnly = true)
     public MonthlyTransactionResponseDto getTransactionsByMonth(int year, int month) {
         User user = userService.getCurrentUser();
 
-        // 해당 월의 시작일, 마지막일 계산
-        YearMonth yearMonth = YearMonth.of(year, month);
-        LocalDate firstDay = yearMonth.atDay(1);
-        LocalDate lastDay = yearMonth.atEndOfMonth();
+        // 선택한 월의 시작일과 마지막일 계산
+        LocalDate startOfMonth = LocalDate.of(year, month, 1);
+        LocalDate endOfMonth = startOfMonth.withDayOfMonth(startOfMonth.lengthOfMonth());
 
-        // 사용자의 해당 월 모든 거래 내역 조회
-        List<Expense> expenses = expenseRepository.findByUserAndTransactionTimeBetween(
-                user, firstDay.atStartOfDay(), lastDay.plusDays(1).atStartOfDay());
-        List<Income> incomes = incomeRepository.findByUserAndTransactionTimeBetween(
-                user, firstDay.atStartOfDay(), lastDay.plusDays(1).atStartOfDay());
+        // 해당 월의 전체 지출 및 수입 합계 계산
+        Long totalIncomeAmount = transactionRepository.getTotalIncomeAmountForMonth(user, startOfMonth.atStartOfDay(), endOfMonth.atTime(23, 59, 59));
+        Long totalExpenseAmount = transactionRepository.getTotalExpenseAmountForMonth(user, startOfMonth.atStartOfDay(), endOfMonth.atTime(23, 59, 59));
 
-        // 날짜별로 그룹화
-        Map<LocalDate, Long> dailyExpenseTotals = expenses.stream()
-                .collect(Collectors.groupingBy(
-                        expense -> expense.getTransactionTime().toLocalDate(),
-                        Collectors.summingLong(Expense::getAmount)
-                ));
-        Map<LocalDate, Long> dailyIncomeTotals = incomes.stream()
-                .collect(Collectors.groupingBy(
-                        income -> income.getTransactionTime().toLocalDate(),
-                        Collectors.summingLong(Income::getAmount)
-                ));
+        // 해당 월의 모든 날짜별 지출 및 수입 합계 조회
+        List<DailyTransactionSummaryDto> dailySummaries = new ArrayList<>();
+        for (LocalDate date = startOfMonth; !date.isAfter(endOfMonth); date = date.plusDays(1)) {
+            Long dailyIncome = transactionRepository.getTotalIncomeAmountForDate(user, date.atStartOfDay(), date.plusDays(1).atStartOfDay());
+            Long dailyExpense = transactionRepository.getTotalExpenseAmountForDate(user, date.atStartOfDay(), date.plusDays(1).atStartOfDay());
 
-        // 해당 월 전체의 총 수입, 총 지출 계산
-        Long totalExpenseAmount = expenses.stream()
-                .mapToLong(Expense::getAmount)
-                .sum();
-        Long totalIncomeAmount = incomes.stream()
-                .mapToLong(Income::getAmount)
-                .sum();
-
-        // 날짜별로 expense, income 합쳐 리스트 생성
-        List<DailySummaryResponseDto> dailySummaries = new ArrayList<>();
-        for (LocalDate date = firstDay; !date.isAfter(lastDay); date = date.plusDays(1)) {
-            dailySummaries.add(new DailySummaryResponseDto(
-                    date,
-                    dailyIncomeTotals.getOrDefault(date, 0L),
-                    dailyExpenseTotals.getOrDefault(date, 0L)
-            ));
+            dailySummaries.add(new DailyTransactionSummaryDto(date, dailyIncome, dailyExpense));
         }
 
-        return MonthlyTransactionResponseDto.from(totalIncomeAmount, totalExpenseAmount, dailySummaries);
+        return MonthlyTransactionResponseDto.builder()
+                .totalIncomeAmount(totalIncomeAmount)
+                .totalExpenseAmount(totalExpenseAmount)
+                .dailySummaries(dailySummaries)
+                .build();
+    }
+
+    // 특정 날짜의 총 지출 금액 조회
+    @Transactional(readOnly = true)
+    public Long getTotalExpenseForDate(User user, LocalDate date) {
+        return transactionRepository.getTotalExpenseAmountForDate(user, date.atStartOfDay(), date.plusDays(1).atStartOfDay());
+    }
+
+    // 최근 지출 내역을 최대 limit개 조회
+    @Transactional(readOnly = true)
+    public List<ExpenseUnitResponseDto> getRecentExpenses(User user, int limit) {
+        return expenseRepository.findRecentExpenses(user, limit).stream()
+                .map(expense -> new ExpenseUnitResponseDto(
+                        expense.getTransactionId(),
+                        expense.getAmount(),
+                        expense.getTransactionTime(),
+                        expense.getExpenseCategory(),
+                        expense.getTransactionSource(),
+                        expense.getNote()
+                ))
+                .toList();
     }
 }
