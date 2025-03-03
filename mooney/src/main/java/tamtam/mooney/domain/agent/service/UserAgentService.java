@@ -90,23 +90,6 @@ public class UserAgentService {
 
     public List<AgentListResponseDto> getAllAgentsWithUnlockStatus() {
         User user = userService.getCurrentUser();
-        // 사용자의 UserAgent 목록을 가져와 Map으로 변환 (key: agentId, value: userAgentId)
-        Map<Long, Long> ownedAgentMap = userAgentRepository.findByUser(user).stream()
-                .collect(Collectors.toMap(
-                        ua -> ua.getAgent().getAgentId(),
-                        UserAgent::getUserAgentId
-                ));
-
-        //  전체 Agent 목록을 가져와 사용자의 보유 여부 및 userAgentId 포함하여 DTO 변환
-        return agentRepository.findAll().stream()
-                .map(agent -> new AgentListResponseDto(
-                        agent.getAgentId(),
-                        agent.getAgentName(),
-                        agent.getImgPath(),
-                        agent.getPersonality(),
-                        ownedAgentMap.containsKey(agent.getAgentId()),
-                        ownedAgentMap.get(agent.getAgentId()) // 보유한 경우 userAgentId 포함, 없으면 null
-                ))
-                .collect(Collectors.toList());
+        return agentRepository.getAllAgentsWithUnlockStatus(user);
     }
 }
