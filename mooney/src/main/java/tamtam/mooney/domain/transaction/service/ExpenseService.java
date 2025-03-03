@@ -12,7 +12,6 @@ import tamtam.mooney.domain.user.service.UserService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.YearMonth;
 
 @Service
 @Transactional

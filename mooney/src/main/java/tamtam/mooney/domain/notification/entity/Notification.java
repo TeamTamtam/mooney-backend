@@ -3,7 +3,6 @@ package tamtam.mooney.domain.notification.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.springframework.data.annotation.CreatedDate;
@@ -34,8 +33,6 @@ public class Notification {
     private String content;
 
     // JSON 형태로 추가 데이터 저장 (예: 링크, 이미지, 기타 옵션)
-    @Lob
-    @Column(columnDefinition = "TEXT")
     private String payload;
 
     @NotNull
