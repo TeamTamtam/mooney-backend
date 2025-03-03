@@ -6,7 +6,6 @@ import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.domain.transaction.dto.ExpenseAddRequestDto;
 import tamtam.mooney.domain.transaction.entity.Expense;
 import tamtam.mooney.domain.transaction.entity.ExpenseCategory;
-import tamtam.mooney.domain.transaction.repository.ExpenseRepository;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.service.UserService;
 

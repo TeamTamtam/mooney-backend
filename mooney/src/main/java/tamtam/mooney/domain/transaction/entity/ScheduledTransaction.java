@@ -1,10 +1,8 @@
 package tamtam.mooney.domain.transaction.entity;
 
-
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
-import org.hibernate.annotations.ColumnDefault;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.global.common.entity.BaseTimeEntity;
 
@@ -13,39 +11,37 @@ import java.time.LocalDate;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-public class RecurringTransaction extends BaseTimeEntity {
+public class ScheduledTransaction extends BaseTimeEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(updatable = false)
-    private Long recurringTransactionId;
+    private Long scheduledTransactionId;
 
     @NotNull
-    private String recurringType; // EXPENSE, INCOME, SAVINGS
+    private String transactionType; // EXPENSE, INCOME, SAVINGS
 
     @NotNull
     @Column(nullable = false)
-    private String title; // 고정비 항목명
+    private String title; // 반복 일정 항목명
 
     @NotNull
     @Column(nullable = false)
     private Long amount;
 
-    private String period; // 고정비 주기
-
-    private LocalDate endDate; // 반복 종료일 (null이면 무한 반복)
+    @NotNull
+    @Column(nullable = false)
+    private LocalDate transactionDate; // 실제 발생한 날짜
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Builder
-    public RecurringTransaction(String title, Long amount, String period,
-                                String recurringType, LocalDate endDate, User user) {
+    public ScheduledTransaction(String transactionType, String title, Long amount, LocalDate transactionDate, User user) {
+        this.transactionType = transactionType;
         this.title = title;
         this.amount = amount;
-        this.period = period;
-        this.recurringType = recurringType;
-        this.endDate = endDate;
+        this.transactionDate = transactionDate;
         this.user = user;
     }
 }

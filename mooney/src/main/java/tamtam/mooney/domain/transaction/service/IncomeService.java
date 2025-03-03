@@ -5,7 +5,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.domain.transaction.dto.IncomeAddRequestDto;
 import tamtam.mooney.domain.transaction.entity.Income;
-import tamtam.mooney.domain.transaction.repository.IncomeRepository;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.service.UserService;
 

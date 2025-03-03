@@ -10,12 +10,8 @@ import java.time.LocalDateTime;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
+@DiscriminatorValue("EXPENSE") // 구분자 추가 (Joined Table 전략)
 public class Expense extends Transaction {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(updatable = false)
-    private Long expenseId;
 
     private String payee;
 
