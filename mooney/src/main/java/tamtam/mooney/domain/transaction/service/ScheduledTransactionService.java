@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional(readOnly = true)
+@Transactional
 @RequiredArgsConstructor
 public class ScheduledTransactionService {
 
@@ -23,6 +23,7 @@ public class ScheduledTransactionService {
     private final UserService userService;
 
     // 특정 월의 ScheduledTransaction 정보를 조회
+    @Transactional(readOnly = true)
     public List<ScheduledTransactionResponseDto> getScheduledTransactionsByMonth(User user, int year, int month) {
         LocalDate startOfMonth = YearMonth.of(year, month).atDay(1);
         LocalDate endOfMonth = YearMonth.of(year, month).atEndOfMonth();
@@ -34,12 +35,14 @@ public class ScheduledTransactionService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public Long getTotalScheduledTransactionAmountByMonth(User user, int year, int month) {
         LocalDate startOfMonth = YearMonth.of(year, month).atDay(1);
         LocalDate endOfMonth = YearMonth.of(year, month).atEndOfMonth();
         return scheduledTransactionRepository.getTotalAmountByUserAndScheduledDateBetween(user, startOfMonth, endOfMonth);
     }
 
+    @Transactional(readOnly = true)
     public Long getTotalPendingScheduledTransactionAmountByMonth(User user, int year, int month) {
         LocalDate startOfMonth = YearMonth.of(year, month).atDay(1);
         LocalDate endOfMonth = YearMonth.of(year, month).atEndOfMonth();

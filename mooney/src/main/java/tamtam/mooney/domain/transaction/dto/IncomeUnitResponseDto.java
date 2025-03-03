@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 
 @Builder
 public record IncomeUnitResponseDto(
-        Long transcationId,
+        Long transactionId,
         Long amount,
         LocalDateTime transactionTime,
         String transactionSource,

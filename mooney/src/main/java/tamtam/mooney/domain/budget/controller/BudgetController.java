@@ -13,6 +13,8 @@ import tamtam.mooney.domain.budget.dto.FirstBudgetRequestDto;
 import tamtam.mooney.domain.budget.dto.MonthlyBudgetProgressResponseDto;
 import tamtam.mooney.domain.budget.service.MonthlyBudgetService;
 
+import java.time.LocalDate;
+
 @Tag(name = "Budget")
 @RestController
 @RequiredArgsConstructor
@@ -31,7 +33,8 @@ public class BudgetController {
     @GetMapping("/monthly")
     public ResponseEntity<MonthlyBudgetProgressResponseDto> getMonthlyBudgetProgress(
             @RequestParam @NotNull @Min(1900) int year,
-            @RequestParam @NotNull @Min(1) @Max(12) int month) {
-        return ResponseEntity.ok(monthlyBudgetService.getMonthlyBudgetProgress(year, month));
+            @RequestParam @NotNull @Min(1) @Max(12) int month,
+            @RequestParam @NotNull LocalDate today) {
+        return ResponseEntity.ok(monthlyBudgetService.getMonthlyBudgetProgress(year, month, today));
     }
 }

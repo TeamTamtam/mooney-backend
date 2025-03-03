@@ -8,6 +8,7 @@ import tamtam.mooney.domain.transaction.entity.Expense;
 import tamtam.mooney.domain.transaction.entity.ExpenseCategory;
 import tamtam.mooney.domain.transaction.entity.Income;
 import tamtam.mooney.domain.transaction.entity.Transaction;
+import tamtam.mooney.domain.transaction.repository.ExpenseRepository;
 import tamtam.mooney.domain.transaction.repository.TransactionRepository;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.service.UserService;
@@ -22,6 +23,7 @@ import java.util.*;
 public class TransactionService {
 
     private final TransactionRepository transactionRepository;
+    private final ExpenseRepository expenseRepository;
     private final UserService userService;
 
     @Transactional(readOnly = true)
@@ -63,10 +65,11 @@ public class TransactionService {
         return MonthlyTransactionDayUnitDto.from(date, totalIncomeAmount, totalExpenseAmount, expenses, incomes);
     }
 
+    @Transactional(readOnly = true)
     public Long getTotalExpenseForCategory(User user, ExpenseCategory expenseCategory, LocalDate startDate, LocalDate endDate) {
         LocalDateTime startOfMonth = startDate.atStartOfDay();
         LocalDateTime endOfMonth = endDate.atTime(23, 59, 59);
-        return transactionRepository.getTotalExpenseForCategory(user, expenseCategory, startOfMonth, endOfMonth);
+        return expenseRepository.getTotalExpenseForCategory(user, expenseCategory, startOfMonth, endOfMonth);
     }
 
     @Transactional(readOnly = true)
@@ -95,5 +98,26 @@ public class TransactionService {
                 .totalExpenseAmount(totalExpenseAmount)
                 .dailySummaries(dailySummaries)
                 .build();
+    }
+
+    // 특정 날짜의 총 지출 금액 조회
+    @Transactional(readOnly = true)
+    public Long getTotalExpenseForDate(User user, LocalDate date) {
+        return transactionRepository.getTotalExpenseAmountForDate(user, date.atStartOfDay(), date.plusDays(1).atStartOfDay());
+    }
+
+    // 최근 지출 내역을 최대 limit개 조회
+    @Transactional(readOnly = true)
+    public List<ExpenseUnitResponseDto> getRecentExpenses(User user, int limit) {
+        return expenseRepository.findRecentExpenses(user, limit).stream()
+                .map(expense -> new ExpenseUnitResponseDto(
+                        expense.getTransactionId(),
+                        expense.getAmount(),
+                        expense.getTransactionTime(),
+                        expense.getExpenseCategory(),
+                        expense.getTransactionSource(),
+                        expense.getNote()
+                ))
+                .toList();
     }
 }

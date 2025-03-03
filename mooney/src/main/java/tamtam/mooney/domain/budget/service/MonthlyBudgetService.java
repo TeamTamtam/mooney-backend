@@ -13,6 +13,7 @@ import tamtam.mooney.domain.transaction.service.ExpenseService;
 import tamtam.mooney.domain.transaction.service.RecurringTransactionService;
 import tamtam.mooney.domain.transaction.service.ScheduledTransactionService;
 import tamtam.mooney.domain.transaction.service.TransactionService;
+import tamtam.mooney.domain.user.dto.UserHomeWeeklyBudgetDto;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.service.UserService;
 import tamtam.mooney.global.exception.CustomException;
@@ -55,15 +56,20 @@ public class MonthlyBudgetService {
         categoryBudgetService.saveCategoryBudgets(monthlyBudget, requestDto.categoryBudgets());
     }
 
-    public MonthlyBudgetProgressResponseDto getMonthlyBudgetProgress(int year, int month) {
+    @Transactional(readOnly = true)
+    public MonthlyBudget getMonthlyBudget(User user, LocalDate monthDate) {
+        return monthlyBudgetRepository.findByUserAndMonthDate(user, monthDate)
+                .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+    }
+
+    @Transactional(readOnly = true)
+    public MonthlyBudgetProgressResponseDto getMonthlyBudgetProgress(int year, int month, LocalDate today) {
         User user = userService.getCurrentUser();
         LocalDate startOfMonth = LocalDate.of(year, month, 1);
         LocalDate endOfMonth = startOfMonth.withDayOfMonth(startOfMonth.lengthOfMonth());
-        LocalDate today = LocalDate.now();
 
         // 월 예산 총액
-        MonthlyBudget monthlyBudget = monthlyBudgetRepository.findByUserAndMonthDate(user, startOfMonth)
-                .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
+        MonthlyBudget monthlyBudget = getMonthlyBudget(user, startOfMonth);
         Long totalBudget = monthlyBudget.getAmount();
 
         // 예정되어 있는 고정 지출 조회
@@ -112,5 +118,10 @@ public class MonthlyBudgetService {
                             remaining
                     );
                 }).collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public UserHomeWeeklyBudgetDto getWeeklyBudgetInfo(User user, LocalDate today) {
+        return null;
     }
 }
