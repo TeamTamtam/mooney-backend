@@ -2,6 +2,7 @@ package tamtam.mooney.domain.auth.controller;
 
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,7 @@ public class AuthController {
     private final AuthService authService;
 
     @GetMapping("/check-email")
-    public ResponseEntity<String> checkEmailAvailability(@RequestParam String email) {
+    public ResponseEntity<String> checkEmailAvailability(@RequestParam @NotNull String email) {
         authService.validateEmailAvailability(email);
         return ResponseEntity.ok().build();
     }
@@ -29,12 +30,12 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<TokenResponseDto> login(@RequestBody AuthLoginRequestDto requestDto) {
+    public ResponseEntity<TokenResponseDto> login(@RequestBody @Valid AuthLoginRequestDto requestDto) {
         return ResponseEntity.ok(authService.login(requestDto));
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<TokenResponseDto> refreshAccessToken(@RequestParam String refreshToken) {
+    public ResponseEntity<TokenResponseDto> refreshAccessToken(@RequestParam @NotNull String refreshToken) {
         return ResponseEntity.ok(authService.refreshAccessToken(refreshToken));
     }
 }
