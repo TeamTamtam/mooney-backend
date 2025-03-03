@@ -31,19 +31,19 @@ public class ScheduledTransactionService {
     // 특정 월의 지출+저축 ScheduledTransaction 조회
     @Transactional(readOnly = true)
     public List<ScheduledTransaction> getScheduledExpensesByMonth(User user, LocalDate startOfMonth, LocalDate endOfMonth) {
-        return scheduledTransactionRepository.findByUserAndScheduledDateBetweenAndTransactionType(user, startOfMonth, endOfMonth, "EXPENSE");
+        return scheduledTransactionRepository.getScheduledTransactionsByTypeForMonth(user, startOfMonth, endOfMonth, "EXPENSE");
     }
 
     // 특정 월의 모든 ScheduledTransaction 조회
     @Transactional(readOnly = true)
-    public List<ScheduledTransaction> getScheduledTransactionsByMonth(User user, LocalDate startOfMonth, LocalDate endOfMonth) {
-        return scheduledTransactionRepository.findByUserAndScheduledDateBetween(user, startOfMonth, endOfMonth);
+    public List<ScheduledTransaction> getScheduledTransactionsForMonth(User user, LocalDate startOfMonth, LocalDate endOfMonth) {
+        return scheduledTransactionRepository.getScheduledTransactionsForMonth(user, startOfMonth, endOfMonth);
     }
 
     // 특정 월의 예정된 ScheduledTransaction 조회
     @Transactional(readOnly = true)
     public Long getTotalPendingScheduledTransactionAmountByMonth(User user, LocalDate startOfMonth, LocalDate endOfMonth) {
-        return scheduledTransactionRepository.getTotalAmountByUserAndTransactionIsNullAndScheduledDateBetween(user, startOfMonth, endOfMonth);
+        return scheduledTransactionRepository.getPendingScheduledTransactionAmountForMonth(user, startOfMonth, endOfMonth);
     }
 
     /*@Transactional(readOnly = true)

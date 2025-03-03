@@ -91,7 +91,7 @@ public class BudgetService {
 
         // 월 예산 총액
         MonthlyBudget monthlyBudget = monthlyBudgetService.getMonthlyBudget(user, startOfMonth);
-        Long monthlyBudgetAmount = monthlyBudget.getAmount();
+        long monthlyBudgetAmount = monthlyBudget.getAmount();
         // 예정되어 있는 고정 지출 조회 (아직 발생하지 않은)
         long pendingExpenseAmount = Optional.ofNullable(scheduledTransactionService.getTotalPendingScheduledTransactionAmountByMonth(user, startOfMonth, endOfMonth)).orElse(0L);
         // 현재까지 발생한 지출 조회

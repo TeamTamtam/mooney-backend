@@ -6,6 +6,6 @@ import java.time.LocalDate;
 @Builder
 public record DailyTransactionSummaryDto(
         LocalDate date,
-        Long totalIncomeAmount,
-        Long totalExpenseAmount
+        long totalIncomeAmount,
+        long totalExpenseAmount
 ) {}
