@@ -15,17 +15,14 @@ public class Expense extends Transaction {
 
     private String payee;
 
-    private String paymentMethod;
-
     @NotNull
     private ExpenseCategory expenseCategory;
 
     @Builder
-    public Expense(String payee, String paymentMethod, ExpenseCategory expenseCategory,
+    public Expense(String payee, ExpenseCategory expenseCategory,
                    long amount, LocalDateTime transactionTime, String transactionSource, String sourceApp, User user) {
         super(amount, transactionTime, transactionSource, sourceApp, user);
         this.payee = payee;
-        this.paymentMethod = paymentMethod;
         this.expenseCategory = expenseCategory;
     }
 

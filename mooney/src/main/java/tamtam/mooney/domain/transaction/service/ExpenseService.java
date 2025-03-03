@@ -33,7 +33,6 @@ public class ExpenseService {
 
         Expense expense = Expense.builder()
                 .payee(request.payee())
-                .paymentMethod(request.paymentMethod())
                 .expenseCategory(expenseCategory)
                 .amount(request.amount())
                 .transactionTime(request.transactionTime())

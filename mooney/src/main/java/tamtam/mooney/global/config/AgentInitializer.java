@@ -28,7 +28,7 @@ public class AgentInitializer {
         ).forEach(agent -> {
             String[] parts = agent.split(",");
             agentRepository.save(new Agent(parts[0].trim(), parts[1].trim(), parts[2].trim()));
-            System.out.println("✅ Saved Agent: " + parts[0] + " (" + parts[1] + ")");
+            // System.out.println("✅ Saved Agent: " + parts[0] + " (" + parts[1] + ")");
         });
 
         System.out.println("🚀 Agents initialized!");
