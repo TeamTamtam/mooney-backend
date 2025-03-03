@@ -48,7 +48,7 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.getTransactionsByDate(date));
     }
 
-    @Operation(summary = "특정 연도와 월의 수입 및 지출 내역 조회")
+    @Operation(summary = "특정 월의 수입 및 지출 내역 조회")
     @GetMapping("/monthly")
     public ResponseEntity<MonthlyTransactionResponseDto> getTransactionsByMonth(@RequestParam @NotNull @Min(1900) int year,
                                                                                 @RequestParam @NotNull @Min(1) @Max(12) int month) {
