@@ -6,15 +6,20 @@ import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.domain.transaction.dto.ExpenseAddRequestDto;
 import tamtam.mooney.domain.transaction.entity.Expense;
 import tamtam.mooney.domain.transaction.entity.ExpenseCategory;
+import tamtam.mooney.domain.transaction.repository.TransactionRepository;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.service.UserService;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class ExpenseService {
 
-    private final ExpenseRepository expenseRepository;
+    private final TransactionRepository transactionRepository;
     private final UserService userService;
     // private final LlmCategoryClassifier llmCategoryClassifier;
 
@@ -31,13 +36,20 @@ public class ExpenseService {
                 .paymentMethod(request.paymentMethod())
                 .expenseCategory(expenseCategory)
                 .amount(request.amount())
-                .transactionDate(request.transactionTime())
+                .transactionTime(request.transactionTime())
                 .transactionSource(request.transactionSource())
                 .sourceApp(request.sourceApp())
                 .user(user)
                 .build();
 
-        expenseRepository.save(expense);
+        transactionRepository.save(expense);
         return expense.getExpenseCategory().name();
+    }
+
+    @Transactional(readOnly = true)
+    public Long getTotalExpenseAmountForMonth(User user, LocalDate startDate, LocalDate endDate) {
+        LocalDateTime startDateTime = startDate.atStartOfDay();
+        LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
+        return transactionRepository.getTotalExpenseAmountForMonth(user, startDateTime, endDateTime);
     }
 }

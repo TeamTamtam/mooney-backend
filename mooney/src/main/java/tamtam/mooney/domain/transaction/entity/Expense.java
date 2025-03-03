@@ -22,8 +22,8 @@ public class Expense extends Transaction {
 
     @Builder
     public Expense(String payee, String paymentMethod, ExpenseCategory expenseCategory,
-                   Long amount, LocalDateTime transactionDate, String transactionSource, String sourceApp, User user) {
-        super(amount, transactionDate, transactionSource, sourceApp, user);
+                   Long amount, LocalDateTime transactionTime, String transactionSource, String sourceApp, User user) {
+        super(amount, transactionTime, transactionSource, sourceApp, user);
         this.payee = payee;
         this.paymentMethod = paymentMethod;
         this.expenseCategory = expenseCategory;

@@ -12,36 +12,33 @@ import java.time.LocalDate;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
 public class ScheduledTransaction extends BaseTimeEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(updatable = false)
     private Long scheduledTransactionId;
 
     @NotNull
-    private String transactionType; // EXPENSE, INCOME, SAVINGS
+    private String transactionType; // "EXPENSE" or "INCOME"
 
     @NotNull
-    @Column(nullable = false)
-    private String title; // 반복 일정 항목명
+    private String title;
 
     @NotNull
-    @Column(nullable = false)
     private Long amount;
 
     @NotNull
     @Column(nullable = false)
-    private LocalDate transactionDate; // 실제 발생한 날짜
+    private LocalDate scheduledDate; // 예정일
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false, updatable = false)
     private User user;
 
-    @Builder
-    public ScheduledTransaction(String transactionType, String title, Long amount, LocalDate transactionDate, User user) {
-        this.transactionType = transactionType;
-        this.title = title;
-        this.amount = amount;
-        this.transactionDate = transactionDate;
-        this.user = user;
-    }
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "recurring_transaction_id", nullable = false)
+    private RecurringTransaction recurringTransaction;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "transaction_id")
+    private Transaction transaction;
 }

@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tamtam.mooney.domain.transaction.dto.DailyTransactionResponseDto;
+import tamtam.mooney.domain.transaction.dto.MonthlyTransactionDayUnitDto;
 import tamtam.mooney.domain.transaction.dto.ExpenseAddRequestDto;
 import tamtam.mooney.domain.transaction.dto.IncomeAddRequestDto;
 import tamtam.mooney.domain.transaction.dto.MonthlyTransactionResponseDto;
@@ -42,7 +42,7 @@ public class TransactionController {
 
     @Operation(summary = "특정 날짜의 수입 및 지출 내역 조회")
     @GetMapping("/daily")
-    public ResponseEntity<DailyTransactionResponseDto> getTransactionsByDate(@RequestParam @NotNull LocalDate date) {
+    public ResponseEntity<MonthlyTransactionDayUnitDto> getTransactionsByDate(@RequestParam @NotNull LocalDate date) {
         return ResponseEntity.ok(transactionService.getTransactionsByDate(date));
     }
 

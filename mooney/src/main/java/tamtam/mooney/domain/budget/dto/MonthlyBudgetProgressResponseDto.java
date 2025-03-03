@@ -11,5 +11,5 @@ public record MonthlyBudgetProgressResponseDto(
         Long monthlyBudget,
         Long recurringExpense,
         Long totalExpense,
-        List<CategoryBudgetDto> categoryBudgets
+        List<CategoryBudgetProgressUnitDto> categoryBudgets
 ) {}

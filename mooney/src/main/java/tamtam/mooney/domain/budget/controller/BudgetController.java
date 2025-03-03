@@ -27,6 +27,7 @@ public class BudgetController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "월별 예산 조회")
     @GetMapping("/monthly")
     public ResponseEntity<MonthlyBudgetProgressResponseDto> getMonthlyBudgetProgress(
             @RequestParam @NotNull @Min(1900) int year,
