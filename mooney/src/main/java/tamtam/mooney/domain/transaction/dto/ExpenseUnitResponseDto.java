@@ -1,7 +1,7 @@
 package tamtam.mooney.domain.transaction.dto;
 
 import lombok.Builder;
-import tamtam.mooney.domain.transaction.entity.ExpenseCategory;
+import tamtam.mooney.domain.enums.ExpenseCategory;
 import java.time.LocalDateTime;
 
 @Builder

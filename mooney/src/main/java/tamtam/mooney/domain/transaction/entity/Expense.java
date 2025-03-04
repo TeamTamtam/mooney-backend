@@ -3,6 +3,7 @@ package tamtam.mooney.domain.transaction.entity;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import tamtam.mooney.domain.enums.ExpenseCategory;
 import tamtam.mooney.domain.user.entity.User;
 
 import java.time.LocalDateTime;

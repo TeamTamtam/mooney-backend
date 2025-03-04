@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import tamtam.mooney.domain.enums.AgentTone;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.global.common.entity.BaseTimeEntity;
 

@@ -1,6 +1,6 @@
 package tamtam.mooney.domain.budget.dto;
 
-import tamtam.mooney.domain.transaction.entity.ExpenseCategory;
+import tamtam.mooney.domain.enums.ExpenseCategory;
 
 public record CategoryBudgetPlanUnitDto (
         long categoryBudgetId,

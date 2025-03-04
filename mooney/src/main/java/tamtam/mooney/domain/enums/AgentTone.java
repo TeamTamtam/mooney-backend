@@ -1,4 +1,4 @@
-package tamtam.mooney.domain.agent.entity;
+package tamtam.mooney.domain.enums;
 
 public enum AgentTone {
     FORMAL,
