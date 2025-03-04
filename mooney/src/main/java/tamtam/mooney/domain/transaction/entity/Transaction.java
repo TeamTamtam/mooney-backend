@@ -34,9 +34,10 @@ public abstract class Transaction extends BaseTimeEntity {
     @Setter
     private String note;
 
+    @Setter
     @ManyToOne
-    @JoinColumn(name = "recurring_transaction_id")
-    private RecurringTransaction recurringTransaction;
+    @JoinColumn(name = "scheduled_transaction_id")
+    private ScheduledTransaction scheduledTransaction;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, updatable = false)
@@ -51,10 +52,6 @@ public abstract class Transaction extends BaseTimeEntity {
         this.transactionSource = transactionSource;
         this.sourceApp = sourceApp;
         this.user = user;
-    }
-
-    public void setRecurring(RecurringTransaction recurringTransaction) {
-        this.recurringTransaction = recurringTransaction;
     }
 
     public void updateAmount(long newAmount) {
