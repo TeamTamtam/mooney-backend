@@ -6,7 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.domain.agent.dto.AgentListResponseDto;
 import tamtam.mooney.domain.agent.dto.AgentResponseDto;
 import tamtam.mooney.domain.agent.entity.Agent;
-import tamtam.mooney.domain.agent.entity.AgentTone;
+import tamtam.mooney.domain.enums.AgentTone;
 import tamtam.mooney.domain.agent.entity.UserAgent;
 import tamtam.mooney.domain.agent.repository.AgentRepository;
 import tamtam.mooney.domain.agent.repository.UserAgentRepository;
@@ -16,8 +16,6 @@ import tamtam.mooney.global.exception.CustomException;
 import tamtam.mooney.global.exception.ErrorCode;
 
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional

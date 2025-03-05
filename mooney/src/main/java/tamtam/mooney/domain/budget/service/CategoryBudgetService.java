@@ -9,7 +9,6 @@ import tamtam.mooney.domain.budget.dto.CategoryBudgetProgressUnitDto;
 import tamtam.mooney.domain.budget.entity.CategoryBudget;
 import tamtam.mooney.domain.budget.entity.MonthlyBudget;
 import tamtam.mooney.domain.budget.repository.CategoryBudgetRepository;
-import tamtam.mooney.domain.transaction.entity.ExpenseCategory;
 import tamtam.mooney.domain.transaction.service.TransactionService;
 import tamtam.mooney.domain.user.entity.User;
 

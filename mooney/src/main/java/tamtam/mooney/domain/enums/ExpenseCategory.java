@@ -1,4 +1,4 @@
-package tamtam.mooney.domain.transaction.entity;
+package tamtam.mooney.domain.enums;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;

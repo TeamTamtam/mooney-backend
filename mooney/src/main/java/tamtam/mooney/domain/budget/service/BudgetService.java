@@ -7,7 +7,7 @@ import tamtam.mooney.domain.budget.dto.*;
 import tamtam.mooney.domain.budget.entity.CategoryBudget;
 import tamtam.mooney.domain.budget.entity.MonthlyBudget;
 import tamtam.mooney.domain.budget.repository.MonthlyBudgetRepository;
-import tamtam.mooney.domain.transaction.entity.ExpenseCategory;
+import tamtam.mooney.domain.enums.ExpenseCategory;
 import tamtam.mooney.domain.transaction.entity.ScheduledTransaction;
 import tamtam.mooney.domain.transaction.service.ExpenseService;
 import tamtam.mooney.domain.transaction.service.RecurringTransactionService;
