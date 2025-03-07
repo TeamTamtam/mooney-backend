@@ -3,11 +3,14 @@ package tamtam.mooney.domain.transaction.repository;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import reactor.core.publisher.Mono;
 import tamtam.mooney.domain.transaction.entity.Transaction;
 import tamtam.mooney.domain.user.entity.User;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     // 특정 월의 총 지출 금액
@@ -50,4 +53,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Object[]> getDailyTotalIncomeAndExpenseByMonth(@Param("user") User user,
                                                         @Param("startOfMonth") LocalDateTime startOfMonth,
                                                         @Param("endOfMonth") LocalDateTime endOfMonth);
+
+    Map<String, Float> findVisitDataByCategory(Long userId, String category);
+
+    Map<String, Float> findSpendingDataByCategory(Long userId, String category);
+
+    // 특정 월의 특정 카테고리 총 지출 금액
+    @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e " +
+            "WHERE e.user = :user " +
+            "AND e.transactionTime BETWEEN :startOfMonth AND :endOfMonth " +
+            "AND e.expenseCategory = :category")
+    Mono<Long> getTotalCategoryExpenseAmountForMonth(@Param("user") User user,
+                                                     @Param("category") String category,
+                                                     @Param("startOfMonth") LocalDate startOfMonth,
+                                                     @Param("endOfMonth") LocalDateTime endOfMonth);
+
+
 }

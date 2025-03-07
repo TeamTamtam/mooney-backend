@@ -37,7 +37,7 @@ public class UserHomeService {
         UserAgent userAgent = userAgentService.getActiveUserAgent(user);
         String welcomeMessage = generateWelcomeMessage(user, userAgent);
 
-        // 주간 미션 가져오기
+        // 주간 미션 가져오기 // TODO: 완성 x
         List<UserHomeWeeklyMissionDto> weeklyMissions = missionService.getWeeklyMissions(user, today);
 
         // 오늘의 지출 합계 // TODO: 완성 x
