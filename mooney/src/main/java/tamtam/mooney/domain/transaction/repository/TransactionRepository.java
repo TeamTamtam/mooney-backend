@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     // 특정 월의 총 지출 금액
@@ -54,19 +55,69 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                                                         @Param("startOfMonth") LocalDateTime startOfMonth,
                                                         @Param("endOfMonth") LocalDateTime endOfMonth);
 
-    Map<String, Float> findVisitDataByCategory(Long userId, String category);
 
-    Map<String, Float> findSpendingDataByCategory(Long userId, String category);
+    @Query("""
+    SELECT e.payee, COUNT(t), AVG(t.amount)
+    FROM Transaction t
+    JOIN Expense e ON t.transactionId = e.transactionId
+    WHERE t.user.userId = :userId
+    AND e.expenseCategory = :category
+    AND t.transactionTime BETWEEN :startDate AND :endDate
+    GROUP BY e.payee
+    ORDER BY COUNT(t) DESC
+    LIMIT 3
+""")
+    List<Object[]> findTop3VisitDataByCategory(@Param("userId") Long userId,
+                                           @Param("category") String category,
+                                           @Param("startDate") LocalDate startDate,
+                                           @Param("endDate") LocalDate endDate);
+
+
+    @Query("""
+    SELECT e.expenseCategory, SUM(t.amount)
+    FROM Transaction t
+    JOIN Expense e ON t.transactionId = e.transactionId
+    WHERE t.user.userId = :userId
+    AND e.expenseCategory = :category
+    AND t.transactionTime BETWEEN :startDate AND :endDate
+    GROUP BY e.expenseCategory
+    ORDER BY COUNT(t) DESC
+    LIMIT 3
+""")
+    List<Object[]> findTop3SpendingDataByCategory(@Param("userId") Long userId,
+                                              @Param("category") String category,
+                                              @Param("startDate") LocalDate startDate,
+                                              @Param("endDate") LocalDate endDate);
+
+
+
+    @Query("""
+    SELECT e.payee, 
+           COUNT(t) / COUNT(DISTINCT FUNCTION('WEEK', t.transactionTime)) AS avgWeeklyVisits,
+           AVG(t.amount) AS avgSpendingPerVisit
+    FROM Transaction t
+    JOIN Expense e ON t.transactionId = e.transactionId
+    WHERE t.user.userId = :userId
+    AND e.payee = :payee
+    AND t.transactionTime BETWEEN :startDate AND :endDate
+    GROUP BY e.payee
+""")
+    Object[] findWeeklyVisitAndSpendingByPayee(@Param("userId") Long userId,
+                                               @Param("payee") String payee,
+                                               @Param("startDate") LocalDate startDate,
+                                               @Param("endDate") LocalDate endDate);
+
+
 
     // 특정 월의 특정 카테고리 총 지출 금액
     @Query("SELECT COALESCE(SUM(e.amount), 0) FROM Expense e " +
             "WHERE e.user = :user " +
             "AND e.transactionTime BETWEEN :startOfMonth AND :endOfMonth " +
             "AND e.expenseCategory = :category")
-    Mono<Long> getTotalCategoryExpenseAmountForMonth(@Param("user") User user,
-                                                     @Param("category") String category,
-                                                     @Param("startOfMonth") LocalDate startOfMonth,
-                                                     @Param("endOfMonth") LocalDateTime endOfMonth);
+    Optional<Long> getTotalCategoryExpenseAmountForMonth(@Param("user") User user,
+                                                         @Param("category") String category,
+                                                         @Param("startOfMonth") LocalDate startOfMonth,
+                                                         @Param("endOfMonth") LocalDateTime endOfMonth);
 
 
 }

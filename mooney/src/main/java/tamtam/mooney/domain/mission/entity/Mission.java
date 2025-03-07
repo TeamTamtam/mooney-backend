@@ -35,7 +35,9 @@ public class Mission extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String advice; // 미션 조언 (긴 문자열 가능)
 
-    private Float result; // 미션 결과 (0 ~ 5(잘함))
+    @Column(nullable = false)
+    private Float result;
+    // 미션 결과 (0 ~ 5(잘함))
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_budget_id", nullable = false)
