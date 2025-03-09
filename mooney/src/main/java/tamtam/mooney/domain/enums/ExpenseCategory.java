@@ -47,4 +47,15 @@ public enum ExpenseCategory {
         }
         throw new IllegalArgumentException("Invalid ExpenseCategory code: " + code);
     }
+
+    // 한글 카테고리명으로 ENUM 변환
+    public static ExpenseCategory fromCategoryName(String name) {
+        for (ExpenseCategory category : ExpenseCategory.values()) {
+            if (category.getCategoryName().equals(name)) {
+                return category;
+            }
+        }
+        // 해당되지 않으면 OTHER로 처리 (또는 예외 던져도 됨)
+        return OTHER;
+    }
 }

@@ -1,5 +1,6 @@
 package tamtam.mooney.domain.mission.service;
 
+import com.google.gson.Gson;
 import jakarta.persistence.Column;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -43,7 +44,8 @@ public class MissionService {
     private final WebClient webClient; // FastAPI 서버에서 데이터 가져오기 위한 클라이언트
     private final MonthlyBudgetRepository monthlyBudgetRepository;
 
-    private static final String FASTAPI_URL = "https://mooney-ai.o-r.kr/predict"; // FastAPI URL
+    //private static final String FASTAPI_URL = "https://mooney-ai.o-r.kr/predict"; // FastAPI URL
+    private static final String FASTAPI_URL = "http://127.0.0.1:8000/predict";
     private final UserService userService;
 
 
@@ -221,18 +223,43 @@ public class MissionService {
 
     //1. FastAPI에서 다음주 예상 지출 데이터 가져오기
     private List<Map<String, Object>> fetchPredictedSpending(User user) {
-        // 백엔드에서 집계한 데이터를 가져옴
+        // 백엔드에서 12주 집계 데이터를 가져옴
         List<Map<String, Object>> aggregatedData = fetchAggregatedWeeklyData(user);
 
-        // 집계된 데이터를 FastAPI에 POST 방식으로 전송
-        return webClient.post()
+        // ✅ FastAPI에 보낼 JSON 데이터 출력
+        System.out.println("🚀 Sending JSON to FastAPI: " + new Gson().toJson(aggregatedData));
+
+        Map<String, Object> requestBody = Map.of("data", aggregatedData);
+
+        Map<String, Object> response = webClient.post()
                 .uri(FASTAPI_URL)
-                .bodyValue(aggregatedData)
+                .bodyValue(requestBody)
                 .retrieve()
-                .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {})
+                .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                 .block();
 
+        System.out.println("✅ Received Response from FastAPI: " + response);
 
+        // 🔥 "predict_results" 키에서 실제 데이터를 추출하여 리스트로 변환
+        List<Map<String, Object>> predictResults = (List<Map<String, Object>>) response.get("predict_results");
+
+        // 🔥 String을 ExpenseCategory Enum으로 변환
+        List<Map<String, Object>> convertedResults = predictResults.stream().map(entry -> {
+            Map<String, Object> newEntry = new HashMap<>(entry);
+            String categoryStr = (String) entry.get("Category"); // 🔥 FastAPI에서 온 문자열
+
+            try {
+                ExpenseCategory categoryEnum = ExpenseCategory.valueOf(categoryStr); // 🔥 Enum 변환
+                newEntry.put("Category", categoryEnum); // 🔄 변환된 Enum 저장
+            } catch (IllegalArgumentException e) {
+                System.out.println("🚨 Warning: Invalid category received - " + categoryStr);
+            }
+
+            return newEntry;
+        }).collect(Collectors.toList());
+
+        System.out.println("✅ Converted Prediction Results: " + convertedResults);
+        return convertedResults;
     }
 
     private List<Map<String, Object>> fetchAggregatedWeeklyData(User user) {
@@ -260,30 +287,33 @@ public class MissionService {
                 user.getUserId(), validCategoryOrdinals, startDateTime
         );
 
-        List<Map<String, Object>> finalResults = new ArrayList<>();
+        List<Map<String, Object>> formattedResults = new ArrayList<>();
         // 결과로 반환되는 week_start는 "yyyy-MM-dd HH:mm:ss" 형식의 문자열일 수 있으므로 포맷터 준비
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter outputFormatter  = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         for (Map<String, Object> entry : rawData) {
             // item_id는 정수(ordinal)로 반환됨 → 이를 다시 enum 이름으로 변환
             int ordinal = ((Number) entry.get("item_id")).intValue();
             String categoryName = ExpenseCategory.values()[ordinal].name();
-            entry.put("item_id", categoryName);
 
             // week_start 값을 문자열로 받아서 LocalDate로 변환
             String tsStr = entry.get("week_start").toString();
             LocalDate weekStartDate;
             try {
                 // 포맷에 맞게 파싱
-                weekStartDate = LocalDate.parse(tsStr, formatter);
+                weekStartDate = LocalDate.parse(tsStr.substring(0, 10)); // 앞 10자리 (yyyy-MM-dd)
             } catch (DateTimeParseException e) {
-                // 파싱 실패 시 앞 10자리를 사용 (예: "2025-03-09")
-                weekStartDate = LocalDate.parse(tsStr.substring(0, 10));
+                continue; // 파싱 오류가 발생하면 해당 데이터는 무시
             }
-            entry.put("week_start", weekStartDate);
-            finalResults.add(entry);
+            // FastAPI가 기대하는 JSON 구조로 변환
+            Map<String, Object> formattedEntry = new HashMap<>();
+            formattedEntry.put("timestamp", weekStartDate.format(outputFormatter)); // "yyyy-MM-dd" 형식
+            formattedEntry.put("amount", entry.get("target")); // 총 소비 금액
+            formattedEntry.put("expense_category", categoryName); // 카테고리 이름
+
+            formattedResults.add(formattedEntry);
         }
-        return finalResults;
+        return formattedResults;
     }
 
 

@@ -58,6 +58,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     //Webclient
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
+
+    // Apache POI for Excel (XLSX 파일 읽기)
+    implementation 'org.apache.poi:poi-ooxml:5.2.3'
+
+    // PostgreSQL JDBC Driver
+    implementation 'org.postgresql:postgresql:42.5.1'
 }
 
 dependencyManagement {

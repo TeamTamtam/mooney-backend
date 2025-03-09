@@ -13,10 +13,12 @@ import tamtam.mooney.domain.transaction.dto.MonthlyTransactionDayUnitDto;
 import tamtam.mooney.domain.transaction.dto.ExpenseAddRequestDto;
 import tamtam.mooney.domain.transaction.dto.IncomeAddRequestDto;
 import tamtam.mooney.domain.transaction.dto.MonthlyTransactionResponseDto;
+import tamtam.mooney.domain.transaction.service.ExpenseDataLoader;
 import tamtam.mooney.domain.transaction.service.ExpenseService;
 import tamtam.mooney.domain.transaction.service.IncomeService;
 import tamtam.mooney.domain.transaction.service.TransactionService;
 
+import java.io.IOException;
 import java.time.LocalDate;
 
 @Tag(name = "Transaction")
@@ -27,6 +29,7 @@ public class TransactionController {
     private final TransactionService transactionService;
     private final ExpenseService expenseService;
     private final IncomeService incomeService;
+    private final ExpenseDataLoader expenseDataLoader;
 
     @Operation(summary = "지출 내역 추가")
     @PostMapping("/expenses")
@@ -54,4 +57,11 @@ public class TransactionController {
                                                                                 @RequestParam @NotNull @Min(1) @Max(12) int month) {
         return ResponseEntity.ok(transactionService.getTransactionsByMonth(year, month));
     }
+
+//    @Operation(summary = "엑셀로 지출 내역 추가")
+//    @PostMapping("/excel")
+//    public ResponseEntity<String> createIncome() throws IOException {
+//        expenseDataLoader.loadExpensesFromExcel("C:/Users/mingk/Downloads/재현 소비내역.xlsx");
+//        return ResponseEntity.ok("Expenses loaded successfully.");
+//    }
 }
