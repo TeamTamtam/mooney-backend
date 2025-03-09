@@ -5,5 +5,5 @@ import lombok.Builder;
 @Builder
 public record UserHomeWeeklyMissionDto(
         String title,
-        Float status
+        Float result
 ) {}

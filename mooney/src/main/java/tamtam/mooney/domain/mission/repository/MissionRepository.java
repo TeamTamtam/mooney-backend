@@ -1,6 +1,7 @@
 package tamtam.mooney.domain.mission.repository;
 
 import io.lettuce.core.dynamic.annotation.Param;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import tamtam.mooney.domain.mission.entity.Mission;
@@ -27,6 +28,16 @@ public interface MissionRepository extends JpaRepository<Mission, Long> {
             "JOIN cb.monthlyBudget mb " +
             "WHERE m.missionId = :missionId")
     Optional<Long> findUserIdByMissionId(@Param("missionId") Long missionId);
+
+    //현재 진행중인 미션의 place를 가져오기
+    @Query("SELECT m.place FROM Mission m " +
+            "WHERE m.categoryBudget.monthlyBudget.user.userId = :userId " +
+            "AND :today BETWEEN m.startDate AND m.endDate")
+    List<String> findWeeklyMissionPlacesByUser(@Param("userId") Long userId, @Param("today") LocalDate today);
+
+    Mission findMissionByPlace(@NotNull String place);
+
+
 
 
 }

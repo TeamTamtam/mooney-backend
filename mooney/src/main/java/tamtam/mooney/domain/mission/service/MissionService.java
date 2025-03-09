@@ -10,6 +10,7 @@ import tamtam.mooney.domain.budget.entity.CategoryBudget;
 import tamtam.mooney.domain.budget.repository.CategoryBudgetRepository;
 import tamtam.mooney.domain.budget.repository.MonthlyBudgetRepository;
 import tamtam.mooney.domain.enums.ExpenseCategory;
+import tamtam.mooney.domain.mission.dto.MissionDto;
 import tamtam.mooney.domain.mission.entity.Mission;
 import tamtam.mooney.domain.mission.repository.MissionRepository;
 import tamtam.mooney.domain.transaction.repository.TransactionRepository;
@@ -46,6 +47,32 @@ public class MissionService {
                         mission.getTitle(),
                         mission.getResult()))
                 .collect(Collectors.toList());
+    }
+
+    // 저장해놓은 미션 가져오기(미션탭)
+    public List<MissionDto> getWeeklyMissionsDetail(User user, LocalDate today) {
+        List<Mission> missions = missionRepository.findWeeklyMissionsByUser(user.getUserId(), today);
+
+        return missions.stream()
+                .map(mission -> new MissionDto(
+                        mission.getTitle(),
+                        mission.getAdvice(),
+                        mission.getResult(),
+                        mission.getNumOfExpense(),
+                        mission.getAmountOfExpense()))
+                .collect(Collectors.toList());
+    }
+
+    // 미션 상태 업데이트 - expense 발생할 때마다 미션에 해당하는지 보고 미션에 해당되면 추적해서 저장
+    public void updateMission(User user, String payee, long amount){
+        LocalDate today = LocalDate.now();
+        List<String> missionPlaces = missionRepository.findWeeklyMissionPlacesByUser(user.getUserId(), today);
+        if (missionPlaces.contains(payee)) {
+            // missionPlaces에 포함된 경우의 처리
+            Mission mission = missionRepository.findMissionByPlace(payee);
+            //해당 미션의 numOfExpense와 amountOfExpense에 더하기
+            mission.addExpense(amount);
+        }
     }
 
 
@@ -162,14 +189,15 @@ public class MissionService {
     private Mission generateCategoryMission(User user, ExpenseCategory category, List<Object[]> visitData,
                                             List<Object[]> spendingData, long realWeeklyCategoryBudget, long expectedSpending, CategoryBudget categoryBudget) {
         long requiredSaving = expectedSpending - realWeeklyCategoryBudget; // 줄여야되는 금액
-        LocalDateTime startDate = LocalDateTime.now();
-        LocalDateTime endDate = LocalDateTime.now().plusDays(6);
+        LocalDateTime startDate = LocalDateTime.now().plusDays(1); // 일요일 자정 전에 생성
+        LocalDateTime endDate = LocalDateTime.now().plusDays(7);
 
 
         float visitGap = Float.MAX_VALUE;
         float spendingGap = Float.MAX_VALUE;
         String title = null;
         String advice = null;
+        String place = null;
 
         // 방문 횟수 제한 미션
         if (!visitData.isEmpty()) {
@@ -180,7 +208,7 @@ public class MissionService {
             Object[] targetVisit = visitData.get(random.nextInt(visitData.size()));
 
             // 선택된 장소의 정보 가져오기
-            String place = (String) targetVisit[0];   // 첫 번째 값 (payee)
+            place = (String) targetVisit[0];   // 첫 번째 값 (payee)
             float averageVisit = ((Number) targetVisit[1]).floatValue(); // 두 번째 값 (방문 횟수)
             float averageCost = ((Number) targetVisit[2]).floatValue();
 
@@ -203,7 +231,7 @@ public class MissionService {
             Random random = new Random();
             Object[] targetSpending = spendingData.get(random.nextInt(visitData.size()));
 
-            String place = (String) targetSpending[0];   // 첫 번째 값 (payee)
+            String spendingPlace = (String) targetSpending[0];   // 첫 번째 값 (payee)
             float averageVisit = ((Number) targetSpending[1]).floatValue(); // 두 번째 값 (방문 횟수)
             float averageCost = ((Number) targetSpending[2]).floatValue();
             float spending = ((Number) targetSpending[3]).floatValue();
@@ -223,15 +251,16 @@ public class MissionService {
             if (spendingGap < visitGap) {
                 advice = spendingAdvice;
                 title = spendingTitle;
+                place= spendingPlace;
             }
 
         }
-        return new Mission(startDate, endDate, title, advice, categoryBudget);
+        return new Mission(startDate, endDate, title, place, advice, categoryBudget);
     }
 
 
     /**
-     * 특정 카테고리의 예산을 동기적으로 가져오기
+     * 특정 카테고리의 예산을 가져오기
      */
     private Long getUserCategoryBudgetAmount(User user, ExpenseCategory category, LocalDate monthDate) {
         return categoryBudgetRepository.findCategoryBudgetByUserIdAndExpenseCategoryAndMonth(user.getUserId(), category, monthDate).getAmount(); // Returns 0 if no value is found
@@ -262,6 +291,7 @@ public class MissionService {
         Object[] result = transactionRepository.findWeeklyVisitAndSpendingByPayee(user.getUserId(), payee, startDate, endDate);
         return convertToMap(result);
     }
+
 
     private Map<String, Float> convertToMap(Object[] result) {
         if (result == null) {

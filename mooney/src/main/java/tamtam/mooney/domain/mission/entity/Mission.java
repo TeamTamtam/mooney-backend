@@ -8,6 +8,7 @@ import tamtam.mooney.domain.budget.entity.CategoryBudget;
 
 import java.time.LocalDateTime;
 
+@Setter
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
@@ -30,6 +31,10 @@ public class Mission extends BaseTimeEntity {
     @Column(nullable = false)
     private String title; // 미션 제목
 
+    @NotNull
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String place;
+
     @Lob
     @NotNull
     @Column(columnDefinition = "TEXT", nullable = false)
@@ -39,20 +44,32 @@ public class Mission extends BaseTimeEntity {
     private Float result;
     // 미션 결과 (0 ~ 5(잘함))
 
+    @Column(nullable = false)
+    private long numOfExpense = 0;
+
+    @Column(nullable = false)
+    private long amountOfExpense = 0;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_budget_id", nullable = false)
     private CategoryBudget categoryBudget; // 연관된 월별 카테고리 예산
 
     @Builder
-    public Mission(LocalDateTime startDate, LocalDateTime endDate, String title, String advice, CategoryBudget categoryBudget) {
+    public Mission(LocalDateTime startDate, LocalDateTime endDate, String title, String place, String advice, CategoryBudget categoryBudget) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.title = title;
+        this.place = place;
         this.advice = advice;
         this.categoryBudget = categoryBudget;
     }
 
     public void updateResult(Float result) {
         this.result = result;
+    }
+
+    public void addExpense(long amount) {
+        this.numOfExpense += 1;
+        this.amountOfExpense += amount;
     }
 }

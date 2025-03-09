@@ -6,10 +6,10 @@ import java.time.LocalDateTime;
 
 @Builder
 public record MissionDto(
-         LocalDateTime startTime,
-         LocalDateTime endDate,
          String title,
-         String advice
-
+         String advice,
+         Float result,
+         long numOfExpense,
+         long amountOfExpense
 ) {
 }
