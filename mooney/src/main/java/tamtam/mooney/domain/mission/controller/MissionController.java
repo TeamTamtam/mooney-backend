@@ -29,15 +29,11 @@ public class MissionController {
     private final MissionService missionService;
 
     @Operation(summary = "미션창 조회(배경, 미션 현황 업데이트)")
-    @GetMapping("/")
-    public ResponseEntity<MissionTabDto> getMissionResultByDate(@RequestParam User user, @RequestParam @NotNull LocalDate date) {
+    @GetMapping("")
+    public ResponseEntity<MissionTabDto> getMissionResultByDate() {
         LocalDate today = LocalDate.now();
-        List<MissionDto> weeklyMissions =  missionService.getWeeklyMissionsDetail(user, today);
-        Float sum = 0.0F;
-        for(MissionDto weeklyMission : weeklyMissions) {
-            sum += weeklyMission.result();
-        }
-        Float mooneyStatus = sum / weeklyMissions.size();
+        List<MissionDto> weeklyMissions =  missionService.getWeeklyMissionsDetail(today);
+        Float mooneyStatus = missionService.updateMissionResult();
 
         MissionTabDto missionTabDto = new MissionTabDto(weeklyMissions, mooneyStatus);
         return ResponseEntity.ok(missionTabDto);
@@ -45,17 +41,18 @@ public class MissionController {
 
     @Operation(summary = "이번주 미션 받기")
     @GetMapping("/new")
-    public ResponseEntity<List<UserHomeWeeklyMissionDto>> getNewMission(@RequestParam User user) {
-        List<UserHomeWeeklyMissionDto> weeklyMissionDto = missionService.generateWeeklyMissions(user);
+    public ResponseEntity<List<UserHomeWeeklyMissionDto>> getNewMission() {
+        List<UserHomeWeeklyMissionDto> weeklyMissionDto = missionService.generateWeeklyMissions();
         return ResponseEntity.ok(weeklyMissionDto);
     }
 
     @Operation(summary = "홈 화면에서 미션 결과 조회")
     @GetMapping("/home")
-    public ResponseEntity<List<UserHomeWeeklyMissionDto>> getMissionStatusHome(@RequestParam User user)
+    public ResponseEntity<List<UserHomeWeeklyMissionDto>> getMissionStatusHome()
     {
         LocalDate today = LocalDate.now();
-        List<UserHomeWeeklyMissionDto> weeklyMissions =  missionService.getWeeklyMissions(user, today);
+        Float result = missionService.updateMissionResult();
+        List<UserHomeWeeklyMissionDto> weeklyMissions =  missionService.getWeeklyMissions(today);
         return ResponseEntity.ok(weeklyMissions);
     }
 

@@ -1,5 +1,6 @@
 package tamtam.mooney.domain.mission.service;
 
+import jakarta.persistence.Column;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +11,7 @@ import tamtam.mooney.domain.budget.entity.CategoryBudget;
 import tamtam.mooney.domain.budget.repository.CategoryBudgetRepository;
 import tamtam.mooney.domain.budget.repository.MonthlyBudgetRepository;
 import tamtam.mooney.domain.enums.ExpenseCategory;
+import tamtam.mooney.domain.enums.MissionType;
 import tamtam.mooney.domain.mission.dto.MissionDto;
 import tamtam.mooney.domain.mission.entity.Mission;
 import tamtam.mooney.domain.mission.repository.MissionRepository;
@@ -17,6 +19,7 @@ import tamtam.mooney.domain.transaction.repository.TransactionRepository;
 import tamtam.mooney.domain.user.dto.UserHomeWeeklyMissionDto;
 import tamtam.mooney.domain.user.entity.User;
 import org.springframework.core.ParameterizedTypeReference;
+import tamtam.mooney.domain.user.service.UserService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -36,10 +39,12 @@ public class MissionService {
     private final MonthlyBudgetRepository monthlyBudgetRepository;
 
     private static final String FASTAPI_URL = "https://mooney-ai.o-r.kr/predict"; // FastAPI URL
+    private final UserService userService;
 
 
     // 저장해놓은 미션 가져오기(홈)
-    public List<UserHomeWeeklyMissionDto> getWeeklyMissions(User user, LocalDate today) {
+    public List<UserHomeWeeklyMissionDto> getWeeklyMissions(LocalDate today) {
+        User user = userService.getCurrentUser();
         List<Mission> missions = missionRepository.findWeeklyMissionsByUser(user.getUserId(), today);
 
         return missions.stream()
@@ -50,7 +55,8 @@ public class MissionService {
     }
 
     // 저장해놓은 미션 가져오기(미션탭)
-    public List<MissionDto> getWeeklyMissionsDetail(User user, LocalDate today) {
+    public List<MissionDto> getWeeklyMissionsDetail(LocalDate today) {
+        User user = userService.getCurrentUser();
         List<Mission> missions = missionRepository.findWeeklyMissionsByUser(user.getUserId(), today);
 
         return missions.stream()
@@ -63,7 +69,7 @@ public class MissionService {
                 .collect(Collectors.toList());
     }
 
-    // 미션 상태 업데이트 - expense 발생할 때마다 미션에 해당하는지 보고 미션에 해당되면 추적해서 저장
+    // 미션 데이터(방문 횟수, 사용한 금액) 업데이트 - expense 발생할 때마다 미션에 해당하는지 보고 미션에 해당되면 추적해서 저장
     public void updateMission(User user, String payee, long amount){
         LocalDate today = LocalDate.now();
         List<String> missionPlaces = missionRepository.findWeeklyMissionPlacesByUser(user.getUserId(), today);
@@ -75,8 +81,129 @@ public class MissionService {
         }
     }
 
+    //미션 상태 업데이트
+    public float updateMissionResult(){
+        User user = userService.getCurrentUser();
+        LocalDate today = LocalDate.now();
+        List<Mission> missions = missionRepository.findWeeklyMissionsByUser(user.getUserId(), today);
+        int currentDayOfWeek = today.getDayOfWeek().getValue();
+        float sum = 0;
+        for(Mission mission : missions){
+            float result = 0;
+            if(mission.getMissionType().equals("VISIT")){ //방문 기반 미션
+                result = calculateVisitMissionScore(mission.getMax(), mission.getNumOfExpense(), currentDayOfWeek);
+            }
+            else{
+                result = calculateSpendingMissionScore(mission.getMax(), mission.getAmountOfExpense(), currentDayOfWeek);
+            }
+            mission.updateResult(result);
+            sum += result;
+        }
+        float totalAvg = sum / missions.size();
 
-     //# FastAPI 서버에서 카테고리 및 예상 지출 금액을 가져와 현재 주별 예산과 비교하는 동기 메서드(1~3 포함)
+
+        return totalAvg;
+    }
+
+    /**
+     * 방문 기반 미션 점수 계산 (예: "카페 앨리스 이번 주 쉬어가기")
+     * 기본 점수는 3.0점이며, 현재 방문 횟수와 예상 방문 횟수, 그리고 최종 예측 방문 횟수를 기반으로 점수를 조정합니다.
+     *
+     * @param maxVisitsAllowed 미션에서 정한 최대 방문 횟수
+     * @param currentVisits 현재까지의 방문 횟수
+     * @param currentDayOfWeek 현재 요일 (1: 월요일 ~ 7: 일요일)
+     * @return 1 ~ 5 사이의 미션 점수
+     */
+    public float calculateVisitMissionScore(long maxVisitsAllowed, long currentVisits, int currentDayOfWeek) {
+        float baseScore = 3.0f;
+        // 일주일 진행 비율 계산 (예: 월요일이면 1/7, 일요일이면 7/7)
+        float weekProgress = currentDayOfWeek / 7.0f;
+        float expectedVisits = maxVisitsAllowed * weekProgress;
+
+        // 주간 진행률을 토대로 예측 방문 횟수 (현재 진행률이 0이 아니면)
+        float predictedVisits = (weekProgress > 0) ? (currentVisits / weekProgress) : currentVisits;
+
+        float adjustment = 0.0f;
+
+        // 현재 방문이 기대치보다 적으면 긍정적 평가 (보너스)
+        if (currentVisits < expectedVisits) {
+            // 예상치 대비 얼마나 적은지 비율 산출 (예: 20% 미만이면 보너스가 커짐)
+            float diffRatio = (expectedVisits - currentVisits) / expectedVisits;
+            adjustment = 2.0f * diffRatio;  // 최대 보너스는 +2점 정도
+        } else {
+            // 현재 방문이 기대치를 초과하면 감점
+            float diff = currentVisits - expectedVisits;
+            adjustment = (diff > 1 ? -1.5f : -1.0f);
+        }
+
+        // 추가로, 주간 추세로 예측한 방문 횟수가 최대 허용치보다 크다면 추가 감점
+        if (predictedVisits > maxVisitsAllowed) {
+            float overageRatio = (predictedVisits - maxVisitsAllowed) / maxVisitsAllowed;
+            adjustment -= 1.5f * overageRatio;
+        }
+
+        float score = baseScore + adjustment;
+        return clamp(score, 1.0f, 5.0f);
+    }
+
+    /**
+     * 소비 기반 미션 점수 계산 (예: "이번 주 올리브영에서 10,000원 이하 소비")
+     * 기본 점수는 3.0점이며, 현재 소비액과 예상 소비액, 그리고 최종 예측 소비액을 기반으로 점수를 조정합니다.
+     *
+     * @param maxSpendingAllowed 미션에서 허용한 최대 소비액
+     * @param currentSpending 현재까지의 소비액
+     * @param currentDayOfWeek 현재 요일 (1: 월요일 ~ 7: 일요일)
+     * @return 1 ~ 5 사이의 미션 점수
+     */
+    public float calculateSpendingMissionScore(float maxSpendingAllowed, float currentSpending, int currentDayOfWeek) {
+        float baseScore = 3.0f;
+        float weekProgress = currentDayOfWeek / 7.0f;
+        float expectedSpending = maxSpendingAllowed * weekProgress;
+
+        // 주간 진행률을 토대로 예측 소비액 계산
+        float predictedSpending = (weekProgress > 0) ? (currentSpending / weekProgress) : currentSpending;
+
+        float adjustment = 0.0f;
+
+        // 현재 소비액이 예상 소비액보다 낮으면 보너스
+        if (currentSpending < expectedSpending) {
+            float diffRatio = (expectedSpending - currentSpending) / expectedSpending;
+            adjustment = 2.0f * diffRatio;
+        } else {
+            // 소비액이 예상 소비액보다 높으면 감점
+            float diff = currentSpending - expectedSpending;
+            adjustment = (diff > (expectedSpending * 0.5f) ? -1.5f : -1.0f);
+        }
+
+        // 예측 소비액이 최대 허용액을 초과할 경우 추가 감점
+        if (predictedSpending > maxSpendingAllowed) {
+            float overageRatio = (predictedSpending - maxSpendingAllowed) / maxSpendingAllowed;
+            adjustment -= 1.5f * overageRatio;
+        }
+
+        float score = baseScore + adjustment;
+        return clamp(score, 1.0f, 5.0f);
+    }
+
+    /**
+     * 점수를 주어진 범위 내로 클램핑하는 유틸리티 메서드
+     *
+     * @param value 입력 값
+     * @param min 최소값
+     * @param max 최대값
+     * @return min과 max 사이로 조절된 값
+     */
+    private float clamp(float value, float min, float max) {
+        if (value < min) return min;
+        if (value > max) return max;
+        return value;
+    }
+
+
+
+
+
+    //# FastAPI 서버에서 카테고리 및 예상 지출 금액을 가져와 현재 주별 예산과 비교하는 동기 메서드(1~3 포함)
     // => 지출 > 예상인 카테고리에 한해 카테고리, realWeeklyCategoryBudget, predictedSpending을 return
      private List<Map<String, Object>> getSelectedCategories(User user) {
          // 1️⃣ FastAPI에서 예상 지출 데이터 가져오기 (동기 방식)
@@ -156,7 +283,8 @@ public class MissionService {
      * "WeeklyBudget", realWeeklyCategoryBudget,
      * "PredictedSpending", predictedSpending
      **/
-    public List<UserHomeWeeklyMissionDto> generateWeeklyMissions(User user) {
+    public List<UserHomeWeeklyMissionDto> generateWeeklyMissions() {
+        User user = userService.getCurrentUser();
         List<Map<String, Object>> categoryDataList = getSelectedCategories(user);
         List<UserHomeWeeklyMissionDto> missions = new ArrayList<>();
         LocalDate currentMonthStart = LocalDate.now().withDayOfMonth(1);
@@ -189,8 +317,8 @@ public class MissionService {
     private Mission generateCategoryMission(User user, ExpenseCategory category, List<Object[]> visitData,
                                             List<Object[]> spendingData, long realWeeklyCategoryBudget, long expectedSpending, CategoryBudget categoryBudget) {
         long requiredSaving = expectedSpending - realWeeklyCategoryBudget; // 줄여야되는 금액
-        LocalDateTime startDate = LocalDateTime.now().plusDays(1); // 일요일 자정 전에 생성
-        LocalDateTime endDate = LocalDateTime.now().plusDays(7);
+        LocalDate startDate = LocalDate.now().plusDays(1); // 일요일 자정 전에 생성
+        LocalDate endDate = LocalDate.now().plusDays(7);
 
 
         float visitGap = Float.MAX_VALUE;
@@ -198,6 +326,8 @@ public class MissionService {
         String title = null;
         String advice = null;
         String place = null;
+        long maxAllowedSpending = 0;
+        long maxAllowedVisits = 0;
 
         // 방문 횟수 제한 미션
         if (!visitData.isEmpty()) {
@@ -212,7 +342,7 @@ public class MissionService {
             float averageVisit = ((Number) targetVisit[1]).floatValue(); // 두 번째 값 (방문 횟수)
             float averageCost = ((Number) targetVisit[2]).floatValue();
 
-            float maxAllowedVisits = (float) Math.max(0, (realWeeklyCategoryBudget * 0.8) / averageCost); // 예산 내에서 최대 허용 방문 횟수
+            maxAllowedVisits = (long) Math.max(0, (realWeeklyCategoryBudget * 0.8) / averageCost); // 예산 내에서 최대 허용 방문 횟수
 
             float expectedVisitSpending = maxAllowedVisits * averageCost; // 방문 조정 후 예상 소비 금액
             float visitSpendingGap = Math.abs(realWeeklyCategoryBudget - expectedVisitSpending); // 허용 소비 금액과 차이 계산
@@ -236,8 +366,8 @@ public class MissionService {
             float averageCost = ((Number) targetSpending[2]).floatValue();
             float spending = ((Number) targetSpending[3]).floatValue();
 
-            float maxAllowedSpending = (float) Math.max(realWeeklyCategoryBudget * 0.8, spending - (requiredSaving * 0.9)); // 허용된 범위 내에서 조절
-            maxAllowedSpending = Math.min(spending, maxAllowedSpending); // 원래 소비 금액보다 크지 않도록 조절
+            maxAllowedSpending = (long) Math.max(realWeeklyCategoryBudget * 0.8, spending - (requiredSaving * 0.9)); // 허용된 범위 내에서 조절
+            maxAllowedSpending = (long) Math.min(spending, maxAllowedSpending); // 원래 소비 금액보다 크지 않도록 조절
 
             float spendingGapValue = Math.abs(realWeeklyCategoryBudget - maxAllowedSpending); // 허용 소비 금액과 차이 계산
 
@@ -249,13 +379,18 @@ public class MissionService {
 
             // 🚀 방문 제한과 소비 제한 중 더 적절한 미션 선택
             if (spendingGap < visitGap) {
+                MissionType missionType = MissionType.valueOf("EXPENSE");
                 advice = spendingAdvice;
                 title = spendingTitle;
-                place= spendingPlace;
+                place = spendingPlace;
+                return new Mission(missionType, startDate, endDate, title, place, advice, categoryBudget, maxAllowedSpending);
             }
-
+            else {
+                MissionType missionType = MissionType.valueOf("VISIT");
+                return new Mission(missionType, startDate, endDate, title, place, advice, categoryBudget, maxAllowedVisits);
+            }
         }
-        return new Mission(startDate, endDate, title, place, advice, categoryBudget);
+        return null; //TODO 에러 처리 필요
     }
 
 
