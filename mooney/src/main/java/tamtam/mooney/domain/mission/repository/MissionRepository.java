@@ -3,7 +3,6 @@ package tamtam.mooney.domain.mission.repository;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import reactor.core.publisher.Mono;
 import tamtam.mooney.domain.mission.entity.Mission;
 
 import java.time.LocalDate;
@@ -12,13 +11,9 @@ import java.util.Map;
 import java.util.Optional;
 
 public interface MissionRepository extends JpaRepository<Mission, Long> {
-    Mono<Map<String, Float>> findVisitDataByCategory(Long userId, String category);
+    Float findMissionResultByMissionId(Long missionId);
 
-    Mono<Map<String, Float>> findSpendingDataByCategory(Long userId, String category);
-
-    Float findMissionResultById(Long missionId);
-
-    List<Mission> getMissionByCategoryBudget(Long categoryBudgetId);
+//    List<Mission> getMissionByCategoryBudget_Id(Long categoryBudgetId);
 
     // 1️⃣ 사용자의 이번 주 미션 가져오기
     @Query("SELECT m FROM Mission m " +

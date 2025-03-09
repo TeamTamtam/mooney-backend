@@ -4,9 +4,11 @@ import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import reactor.core.publisher.Mono;
+import tamtam.mooney.domain.enums.ExpenseCategory;
 import tamtam.mooney.domain.transaction.entity.Transaction;
 import tamtam.mooney.domain.user.entity.User;
 
+import org.springframework.data.domain.Pageable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -56,6 +58,24 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                                                         @Param("endOfMonth") LocalDateTime endOfMonth);
 
 
+    /*
+    * [
+    {
+        "payee": "스타벅스",
+        "visitCount": 5,
+        "avgSpending": 4500.0
+    },
+    {
+        "payee": "맥도날드",
+        "visitCount": 3,
+        "avgSpending": 5200.0
+    },
+    {
+        "payee": "버거킹",
+        "visitCount": 2,
+        "avgSpending": 6000.0
+    }
+]*/
     @Query("""
     SELECT e.payee, COUNT(t), AVG(t.amount)
     FROM Transaction t
@@ -65,35 +85,56 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     AND t.transactionTime BETWEEN :startDate AND :endDate
     GROUP BY e.payee
     ORDER BY COUNT(t) DESC
-    LIMIT 3
 """)
-    List<Object[]> findTop3VisitDataByCategory(@Param("userId") Long userId,
-                                           @Param("category") String category,
+    List<Object[]> findVisitDataByCategory(@Param("userId") Long userId,
+                                           @Param("category") ExpenseCategory category,
                                            @Param("startDate") LocalDate startDate,
-                                           @Param("endDate") LocalDate endDate);
+                                           @Param("endDate") LocalDate endDate, Pageable pageable);
 
 
+    /*
+    * [
+    {
+        "payee": "스타벅스",
+        "visitCount": 5,
+        "avgSpending": 4500.0,
+        "spending": 50000
+    },
+    {
+        "payee": "맥도날드",
+        "visitCount": 3,
+        "avgSpending": 5200.0,
+        * "spending": 50000
+    },
+    {
+        "payee": "버거킹",
+        "visitCount": 2,
+        "avgSpending": 6000.0,
+        "spending": 50000
+    }
+]
+*/
+    //소비 금액이 높은 곳이 최상위로 정렬
     @Query("""
-    SELECT e.expenseCategory, SUM(t.amount)
+    SELECT e.payee, COUNT(t), AVG(t.amount), SUM(t.amount)
     FROM Transaction t
     JOIN Expense e ON t.transactionId = e.transactionId
     WHERE t.user.userId = :userId
     AND e.expenseCategory = :category
     AND t.transactionTime BETWEEN :startDate AND :endDate
-    GROUP BY e.expenseCategory
-    ORDER BY COUNT(t) DESC
-    LIMIT 3
+    GROUP BY e.payee
+    ORDER BY SUM(t.amount) DESC
 """)
-    List<Object[]> findTop3SpendingDataByCategory(@Param("userId") Long userId,
-                                              @Param("category") String category,
+    List<Object[]> findSpendingDataByCategory(@Param("userId") Long userId,
+                                              @Param("category") ExpenseCategory category,
                                               @Param("startDate") LocalDate startDate,
-                                              @Param("endDate") LocalDate endDate);
+                                              @Param("endDate") LocalDate endDate, Pageable pageable);
 
 
 
     @Query("""
     SELECT e.payee, 
-           COUNT(t) / COUNT(DISTINCT FUNCTION('WEEK', t.transactionTime)) AS avgWeeklyVisits,
+           COUNT(t) / COUNT(DISTINCTFUNCTION('WEEK', t.transactionTime)) AS avgWeeklyVisits,
            AVG(t.amount) AS avgSpendingPerVisit
     FROM Transaction t
     JOIN Expense e ON t.transactionId = e.transactionId
@@ -115,7 +156,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "AND e.transactionTime BETWEEN :startOfMonth AND :endOfMonth " +
             "AND e.expenseCategory = :category")
     Optional<Long> getTotalCategoryExpenseAmountForMonth(@Param("user") User user,
-                                                         @Param("category") String category,
+                                                         @Param("category") ExpenseCategory category,
                                                          @Param("startOfMonth") LocalDate startOfMonth,
                                                          @Param("endOfMonth") LocalDateTime endOfMonth);
 

@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/mooney-backend.iml" filepath="$PROJECT_DIR$/.idea/mooney-backend.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/mooney.main.iml" filepath="$PROJECT_DIR$/.idea/modules/mooney.main.iml" />
     </modules>
   </component>
 </project>

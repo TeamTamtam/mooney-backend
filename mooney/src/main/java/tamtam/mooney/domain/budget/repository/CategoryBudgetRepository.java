@@ -7,6 +7,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import tamtam.mooney.domain.budget.entity.CategoryBudget;
 import tamtam.mooney.domain.budget.entity.MonthlyBudget;
+import tamtam.mooney.domain.enums.ExpenseCategory;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,8 +22,8 @@ public interface CategoryBudgetRepository extends JpaRepository<CategoryBudget, 
     @Query("SELECT cb FROM CategoryBudget cb WHERE cb.monthlyBudget IN " +
             "(SELECT mb FROM MonthlyBudget mb WHERE mb.user.userId = :userId AND mb.monthDate = :monthDate) " +
             "AND cb.expenseCategory = :category")
-    CategoryBudget findCategoryBudgetByUserIdAndCategoryAndMonth(@Param("userId") Long userId,
-                                                                 @Param("category") String category,
+    CategoryBudget findCategoryBudgetByUserIdAndExpenseCategoryAndMonth(@Param("userId") Long userId,
+                                                                 @Param("category") ExpenseCategory category,
                                                                  @Param("monthDate") LocalDate monthDate);
-    CategoryBudget findCategoryBudgetByMonthlyBudgetAndCategory(MonthlyBudget monthlyBudget, String category);
+    CategoryBudget findCategoryBudgetByMonthlyBudgetAndExpenseCategory(MonthlyBudget monthlyBudget, ExpenseCategory category);
 }
