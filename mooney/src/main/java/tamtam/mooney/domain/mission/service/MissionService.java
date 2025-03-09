@@ -21,8 +21,13 @@ import tamtam.mooney.domain.user.entity.User;
 import org.springframework.core.ParameterizedTypeReference;
 import tamtam.mooney.domain.user.service.UserService;
 
+import java.security.Timestamp;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAdjusters;
 import java.time.temporal.WeekFields;
 import java.util.*;
@@ -216,13 +221,72 @@ public class MissionService {
 
     //1. FastAPI에서 다음주 예상 지출 데이터 가져오기
     private List<Map<String, Object>> fetchPredictedSpending(User user) {
-        return webClient.get()
-                .uri(FASTAPI_URL + "?userId=" + user.getUserId())
+        // 백엔드에서 집계한 데이터를 가져옴
+        List<Map<String, Object>> aggregatedData = fetchAggregatedWeeklyData(user);
+
+        // 집계된 데이터를 FastAPI에 POST 방식으로 전송
+        return webClient.post()
+                .uri(FASTAPI_URL)
+                .bodyValue(aggregatedData)
                 .retrieve()
                 .bodyToMono(new ParameterizedTypeReference<List<Map<String, Object>>>() {})
-                .block(); // 동기 처리
+                .block();
+
 
     }
+
+    private List<Map<String, Object>> fetchAggregatedWeeklyData(User user) {
+        // 유효 카테고리 문자열 목록
+        List<String> validCategories = Arrays.asList(
+                "FOOD", "CAFE_SNACKS", "TRANSPORTATION", "ONLINE_SHOPPING",
+                "ALCOHOL_ENTERTAINMENT", "LIVING", "FASHION_SHOPPING", "BEAUTY_CARE",
+                "CULTURE_LEISURE", "TRAVEL_ACCOMMODATION"
+        );
+
+        // 문자열 목록을 enum의 ordinal 값(List<Integer>)로 변환
+        List<Integer> validCategoryOrdinals = validCategories.stream()
+                .map(cat -> ExpenseCategory.valueOf(cat).ordinal())
+                .collect(Collectors.toList());
+
+        LocalDate today = LocalDate.now();
+        // 현재 주의 시작일(월요일 기준)
+        LocalDate currentWeekStart = today.with(DayOfWeek.MONDAY);
+        // 최근 12주: 현재 주 포함하여 11주 전부터
+        LocalDate startWeek = currentWeekStart.minusWeeks(11);
+        LocalDateTime startDateTime = startWeek.atStartOfDay();
+
+        // 쿼리를 통해 최근 12주 내 실제 거래가 있는 주에 대한 집계 데이터 조회
+        List<Map<String, Object>> rawData = transactionRepository.findWeeklyAggregatedTransactions(
+                user.getUserId(), validCategoryOrdinals, startDateTime
+        );
+
+        List<Map<String, Object>> finalResults = new ArrayList<>();
+        // 결과로 반환되는 week_start는 "yyyy-MM-dd HH:mm:ss" 형식의 문자열일 수 있으므로 포맷터 준비
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        for (Map<String, Object> entry : rawData) {
+            // item_id는 정수(ordinal)로 반환됨 → 이를 다시 enum 이름으로 변환
+            int ordinal = ((Number) entry.get("item_id")).intValue();
+            String categoryName = ExpenseCategory.values()[ordinal].name();
+            entry.put("item_id", categoryName);
+
+            // week_start 값을 문자열로 받아서 LocalDate로 변환
+            String tsStr = entry.get("week_start").toString();
+            LocalDate weekStartDate;
+            try {
+                // 포맷에 맞게 파싱
+                weekStartDate = LocalDate.parse(tsStr, formatter);
+            } catch (DateTimeParseException e) {
+                // 파싱 실패 시 앞 10자리를 사용 (예: "2025-03-09")
+                weekStartDate = LocalDate.parse(tsStr.substring(0, 10));
+            }
+            entry.put("week_start", weekStartDate);
+            finalResults.add(entry);
+        }
+        return finalResults;
+    }
+
+
 
     /**
      * 2. 특정 카테고리에 대해 현재 주별 예산과 비교

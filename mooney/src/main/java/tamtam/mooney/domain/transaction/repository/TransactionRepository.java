@@ -161,4 +161,20 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
                                                          @Param("endOfMonth") LocalDateTime endOfMonth);
 
 
+
+
+    @Query(value = "SELECT t.expense_category AS item_id, " +
+            "date_trunc('week', t.transaction_time) AS week_start, " +
+            "SUM(t.amount) AS target " +
+            "FROM transactions t " +
+            "WHERE t.user_id = :userId " +
+            "  AND t.expense_category IN :validCategories " +
+            "  AND t.transaction_time >= :startDate " +
+            "GROUP BY t.expense_category, date_trunc('week', t.transaction_time) " +
+            "ORDER BY date_trunc('week', t.transaction_time) ASC", nativeQuery = true)
+    List<Map<String, Object>> findWeeklyAggregatedTransactions(@Param("userId") Long userId,
+                                                               @Param("validCategories") List<Integer> validCategories,
+                                                               @Param("startDate") LocalDateTime startDate);
+
 }
+
