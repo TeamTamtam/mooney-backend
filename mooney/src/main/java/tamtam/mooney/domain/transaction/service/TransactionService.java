@@ -44,9 +44,10 @@ public class TransactionService {
                         expense.getTransactionId(),
                         expense.getAmount(),
                         expense.getTransactionTime(),
-                        expense.getExpenseCategory(),
                         expense.getTransactionSource(),
-                        expense.getNote()
+                        expense.getNote(),
+                        expense.getPayee(),
+                        expense.getExpenseCategory()
                 ));
                 totalExpenseAmount += expense.getAmount();
             } else if (transaction instanceof Income income) {
@@ -55,7 +56,8 @@ public class TransactionService {
                         income.getAmount(),
                         income.getTransactionTime(),
                         income.getTransactionSource(),
-                        income.getNote()
+                        income.getNote(),
+                        income.getPayer()
                 ));
                 totalIncomeAmount += income.getAmount();
             }
@@ -126,9 +128,10 @@ public class TransactionService {
                         expense.getTransactionId(),
                         expense.getAmount(),
                         expense.getTransactionTime(),
-                        expense.getExpenseCategory(),
                         expense.getTransactionSource(),
-                        expense.getNote()
+                        expense.getNote(),
+                        expense.getPayee(),
+                        expense.getExpenseCategory()
                 ))
                 .toList();
     }
