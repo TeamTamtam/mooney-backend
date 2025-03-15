@@ -102,7 +102,7 @@ public class BudgetService {
         // 하루 예산 계산 (남은 일 수 기준)
         long remainingDays = today.until(endOfMonth).getDays() + 1; // 오늘 포함
         Long dailyBudgetAmount = remainingDays > 0 ? remainingBudgetAmount / remainingDays : 0;
-        List<CategoryBudgetProgressUnitDto> categoryBudgets = categoryBudgetService.getCategoryBudgetProgresses(user, monthlyBudget, startOfMonth, endOfMonth);
+        List<CategoryBudgetProgressUnitDto> categoryBudgets = categoryBudgetService.getCategoryBudgetProgresses(user, monthlyBudget, startOfMonth);
 
         // 사용한 예산 비율 계산
         int budgetUsagePercentage = (int) ((totalExpenseAmount + pendingExpenseAmount) * 100 / monthlyBudgetAmount);
