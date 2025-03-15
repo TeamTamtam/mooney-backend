@@ -104,9 +104,13 @@ public class BudgetService {
         Long dailyBudgetAmount = remainingDays > 0 ? remainingBudgetAmount / remainingDays : 0;
         List<CategoryBudgetProgressUnitDto> categoryBudgets = categoryBudgetService.getCategoryBudgetProgresses(user, monthlyBudget, startOfMonth, endOfMonth);
 
+        // 사용한 예산 비율 계산
+        int budgetUsagePercentage = (int) ((totalExpenseAmount + pendingExpenseAmount) * 100 / monthlyBudgetAmount);
+
         return BudgetProgressResponseDto.builder()
                 .remainingBudgetAmount(remainingBudgetAmount)
                 .dailyBudgetAmount(dailyBudgetAmount)
+                .budgetUsagePercentage(budgetUsagePercentage)
                 .monthlyBudgetAmount(monthlyBudgetAmount)
                 .pendingExpenseAmount(pendingExpenseAmount)
                 .totalExpenseAmount(totalExpenseAmount)
@@ -123,7 +127,7 @@ public class BudgetService {
 
         // 월 예산 총액
         MonthlyBudget monthlyBudget = monthlyBudgetService.getMonthlyBudget(user, startOfMonth);
-        Long monthlyBudgetAmount = monthlyBudget.getAmount();
+        long monthlyBudgetAmount = monthlyBudget.getAmount();
         // 카테고리별 예산
         List<CategoryBudgetPlanUnitDto> categoryBudgets = categoryBudgetService.getCategoryBudgetPlans(user, monthlyBudget, startOfMonth);
         // 이번 달 고정비 가져오기

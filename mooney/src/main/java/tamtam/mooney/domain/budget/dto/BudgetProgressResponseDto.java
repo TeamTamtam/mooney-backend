@@ -8,6 +8,7 @@ import java.util.List;
 public record BudgetProgressResponseDto(
         Long remainingBudgetAmount,
         Long dailyBudgetAmount,
+        int budgetUsagePercentage,
         Long monthlyBudgetAmount,
         Long pendingExpenseAmount,
         Long totalExpenseAmount,

@@ -9,7 +9,8 @@ public record ExpenseUnitResponseDto(
         long transactionId,
         long amount,
         LocalDateTime transactionTime,
-        ExpenseCategory expenseCategory,
         String transactionSource,
-        String note
+        String note,
+        String payee,
+        ExpenseCategory expenseCategory
 ) {}
