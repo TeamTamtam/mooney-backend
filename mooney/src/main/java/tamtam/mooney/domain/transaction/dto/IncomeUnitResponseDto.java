@@ -10,5 +10,6 @@ public record IncomeUnitResponseDto(
         long amount,
         LocalDateTime transactionTime,
         String transactionSource,
-        String note
+        String note,
+        String payer
 ) {}
