@@ -21,6 +21,9 @@ public class Mission extends BaseTimeEntity {
     @Column(updatable = false)
     private Long missionId;
 
+    @Column(columnDefinition = "TEXT", nullable = false)
+    private String advice;
+
     @NotNull
     @Column(nullable = false, updatable = false)
     private LocalDate startDate; // UTC 기준으로 저장
@@ -37,13 +40,8 @@ public class Mission extends BaseTimeEntity {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String place;
 
-    @Lob
-    @NotNull
-    @Column(columnDefinition = "TEXT", nullable = false)
-    private String advice; // 미션 조언 (긴 문자열 가능)
-
     @Column(nullable = false)
-    private Float result;
+    private Float result = 3F;
     // 미션 결과 (0 ~ 5(잘함))
 
     @Column(nullable = false)
@@ -63,7 +61,6 @@ public class Mission extends BaseTimeEntity {
     @JoinColumn(name = "category_budget_id", nullable = false)
     private CategoryBudget categoryBudget; // 연관된 월별 카테고리 예산
 
-    // 금액 기반 미션
     @Builder
     public Mission(MissionType missionType, LocalDate startDate, LocalDate endDate, String title, String place, String advice, CategoryBudget categoryBudget, long max) {
         this.missionType = missionType;

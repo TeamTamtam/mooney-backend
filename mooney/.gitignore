@@ -27,6 +27,7 @@ out/
 !**/src/test/**/out/
 **/.idea
 .idea/
+**/.idea/
 
 
 ### NetBeans ###
@@ -41,6 +42,6 @@ out/
 
 **/application.yml
 
-### 액셀 ###
+### 엑셀 ###
 **/.xlsx
 .xlsx/

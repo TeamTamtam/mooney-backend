@@ -33,7 +33,7 @@ public class MissionController {
     public ResponseEntity<MissionTabDto> getMissionResultByDate() {
         LocalDate today = LocalDate.now();
         List<MissionDto> weeklyMissions =  missionService.getWeeklyMissionsDetail(today);
-        Float mooneyStatus = missionService.updateMissionResult();
+        Float mooneyStatus = missionService.updateMissionResult(today);
 
         MissionTabDto missionTabDto = new MissionTabDto(weeklyMissions, mooneyStatus);
         return ResponseEntity.ok(missionTabDto);
@@ -41,23 +41,10 @@ public class MissionController {
 
     @Operation(summary = "이번주 미션 받기")
     @GetMapping("/new")
-    public ResponseEntity<List<UserHomeWeeklyMissionDto>> getNewMission() {
-        List<UserHomeWeeklyMissionDto> weeklyMissionDto = missionService.generateWeeklyMissions();
+    public ResponseEntity<List<String>> getNewMission() {
+        List<String> weeklyMissionDto = missionService.generateWeeklyMissions();
         return ResponseEntity.ok(weeklyMissionDto);
     }
-
-    @Operation(summary = "홈 화면에서 미션 결과 조회")
-    @GetMapping("/home")
-    public ResponseEntity<List<UserHomeWeeklyMissionDto>> getMissionStatusHome()
-    {
-        LocalDate today = LocalDate.now();
-        Float result = missionService.updateMissionResult();
-        List<UserHomeWeeklyMissionDto> weeklyMissions =  missionService.getWeeklyMissions(today);
-        return ResponseEntity.ok(weeklyMissions);
-    }
-
-
-
 
 
 

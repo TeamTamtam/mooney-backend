@@ -53,6 +53,7 @@ public class MissionService {
     public List<UserHomeWeeklyMissionDto> getWeeklyMissions(LocalDate today) {
         User user = userService.getCurrentUser();
         List<Mission> missions = missionRepository.findWeeklyMissionsByUser(user.getUserId(), today);
+        updateMissionResult(today);
 
         return missions.stream()
                 .map(mission -> new UserHomeWeeklyMissionDto(
@@ -65,6 +66,7 @@ public class MissionService {
     public List<MissionDto> getWeeklyMissionsDetail(LocalDate today) {
         User user = userService.getCurrentUser();
         List<Mission> missions = missionRepository.findWeeklyMissionsByUser(user.getUserId(), today);
+        updateMissionResult(today);
 
         return missions.stream()
                 .map(mission -> new MissionDto(
@@ -89,9 +91,8 @@ public class MissionService {
     }
 
     //미션 상태 업데이트
-    public float updateMissionResult(){
+    public float updateMissionResult(LocalDate today){
         User user = userService.getCurrentUser();
-        LocalDate today = LocalDate.now();
         List<Mission> missions = missionRepository.findWeeklyMissionsByUser(user.getUserId(), today);
         int currentDayOfWeek = today.getDayOfWeek().getValue();
         float sum = 0;
@@ -227,7 +228,7 @@ public class MissionService {
         List<Map<String, Object>> aggregatedData = fetchAggregatedWeeklyData(user);
 
         // ✅ FastAPI에 보낼 JSON 데이터 출력
-        System.out.println("🚀 Sending JSON to FastAPI: " + new Gson().toJson(aggregatedData));
+        // System.out.println("🚀 Sending JSON to FastAPI: " + new Gson().toJson(aggregatedData));
 
         Map<String, Object> requestBody = Map.of("data", aggregatedData);
 
@@ -350,7 +351,7 @@ public class MissionService {
     //3.
     private Long calculateWeeklyBudget(User user, ExpenseCategory category) {
         LocalDate today = LocalDate.now();
-        LocalDate monthDate = today.withDayOfMonth(1); // 해당 월의 첫째 날
+        LocalDateTime monthDate = today.withDayOfMonth(1).atStartOfDay(); // 해당 월의 첫째 날
 
         // 1️⃣ 현재 월의 전체 주 수 계산
         WeekFields weekFields = WeekFields.of(Locale.getDefault());
@@ -363,8 +364,10 @@ public class MissionService {
         int remainingWeeks = totalWeeks - currentWeek + 1;
 
         // 4️⃣ 예산과 지출을 가져와서 연산 수행
-        Long categoryBudgetAmount = getUserCategoryBudgetAmount(user, category, monthDate);
+        //예산
+        Long categoryBudgetAmount = getUserCategoryBudgetAmount(user, category, monthDate.toLocalDate());
 
+        //지출
         Long totalExpense = transactionRepository.getTotalCategoryExpenseAmountForMonth(user, category, monthDate, LocalDateTime.now()).orElse(0L);
         return (categoryBudgetAmount - totalExpense) / remainingWeeks;
     }
@@ -377,28 +380,82 @@ public class MissionService {
      * "WeeklyBudget", realWeeklyCategoryBudget,
      * "PredictedSpending", predictedSpending
      **/
-    public List<UserHomeWeeklyMissionDto> generateWeeklyMissions() {
+    public List<String> generateWeeklyMissions() {
         User user = userService.getCurrentUser();
+        long userId = user.getUserId();
+
+        // 현재 날짜 관련 변수 미리 선언
+        LocalDate now = LocalDate.now();
+        LocalDate currentMonthStart = now.withDayOfMonth(1);
+        LocalDateTime startDate = now.minusMonths(2).atStartOfDay(); // 두 달 전부터 조회
+        LocalDateTime endDate = LocalDateTime.now();
+
+        // 디버깅 로그 (실제 서비스에서는 logger 사용 권장)
+        System.out.println("Current Month 시작 : " + currentMonthStart.format(DateTimeFormatter.ISO_LOCAL_DATE));
+
         List<Map<String, Object>> categoryDataList = getSelectedCategories(user);
-        List<UserHomeWeeklyMissionDto> missions = new ArrayList<>();
-        LocalDate currentMonthStart = LocalDate.now().withDayOfMonth(1);
-        LocalDate startDate = LocalDate.now().minusMonths(2); // 두달동안 사용내역 조회
-        LocalDate endDate = LocalDate.now();
+        System.out.println(categoryDataList);
 
+        List<String> missionTitles = new ArrayList<>();
+
+        System.out.println(categoryDataList);
         for (Map<String, Object> categoryData : categoryDataList) {
-            ExpenseCategory category = (ExpenseCategory) categoryData.get("Category");
-            long predictedSpending = ((Number) categoryData.get("yhat_adjusted")).longValue();
-            long realWeeklyCategoryBudget = calculateWeeklyBudget(user, category);
+            System.out.println(categoryData);
 
-            CategoryBudget categoryBudget = getUserCategoryBudget(user.getUserId(), category, currentMonthStart);
+            // ExpenseCategory 추출 (null이면 예외)
+            ExpenseCategory category = extractCategory(categoryData);
 
-            Mission mission = generateCategoryMission(user, category, getTop3VisitDataByCategory(user, category, startDate, endDate), getTop3SpendingDataByCategory(user, category, startDate, endDate), realWeeklyCategoryBudget, predictedSpending, categoryBudget);
-            missionRepository.save(mission);
-            UserHomeWeeklyMissionDto userHomeWeeklyMissionDto = new UserHomeWeeklyMissionDto(mission.getTitle(), mission.getResult());
-            missions.add(userHomeWeeklyMissionDto);
+            // PredictedSpending 추출 (없으면 기본값 0L)
+            Long predictedSpending = extractPredictedSpending(categoryData);
+
+            // realWeeklyCategoryBudget 계산
+            Long realWeeklyCategoryBudget = calculateWeeklyBudget(user, category);
+            System.out.println("realWeeklyCategoryBudget: " + realWeeklyCategoryBudget);
+
+            System.out.println(userId + " " + category + " " + currentMonthStart);
+
+            // 사용자 카테고리 예산 조회
+            CategoryBudget categoryBudget = getUserCategoryBudget(userId, category, currentMonthStart);
+
+            // 미션 생성
+            Mission mission = generateCategoryMission(
+                    getTop3VisitDataByCategory(user, category, startDate, endDate),
+                    getTop3SpendingDataByCategory(user, category, startDate, endDate),
+                    realWeeklyCategoryBudget,
+                    predictedSpending,
+                    categoryBudget
+            );
+
+            if(mission == null) {
+                throw new IllegalStateException("미션 생성 실패: category=" + category);
+            }
+            System.out.println(mission.getAdvice());
+            missionTitles.add(mission.getTitle());
+
         }
-        return missions;
+        return missionTitles;
     }
+
+    // 헬퍼 메서드: ExpenseCategory 추출
+    private ExpenseCategory extractCategory(Map<String, Object> categoryData) {
+        Object categoryObj = categoryData.get("Category");
+        if (categoryObj == null) {
+            throw new IllegalArgumentException("Category 값이 null입니다.");
+        }
+        return (ExpenseCategory) categoryObj;
+    }
+
+    // 헬퍼 메서드: PredictedSpending 추출
+    private Long extractPredictedSpending(Map<String, Object> categoryData) {
+        Object predictedSpendingObj = categoryData.get("PredictedSpending");
+        if (predictedSpendingObj != null) {
+            return ((Number) predictedSpendingObj).longValue();
+        } else {
+            System.out.println("Warning: PredictedSpending 값이 null입니다. 기본값 0L 사용");
+            return 0L;
+        }
+    }
+
 
 
     /**
@@ -408,84 +465,91 @@ public class MissionService {
      * title2: 스타벅스에서 이번주 15000원 이하 쓰기
      * advice: 평균적으로 일주일에 3.5회 / xxxxx원 마셔요. \n 2회 이하로 마시는 것은 어떨까요?
      */
-    private Mission generateCategoryMission(User user, ExpenseCategory category, List<Object[]> visitData,
-                                            List<Object[]> spendingData, long realWeeklyCategoryBudget, long expectedSpending, CategoryBudget categoryBudget) {
-        long requiredSaving = expectedSpending - realWeeklyCategoryBudget; // 줄여야되는 금액
-        LocalDate startDate = LocalDate.now().plusDays(1); // 일요일 자정 전에 생성
-        LocalDate endDate = LocalDate.now().plusDays(7);
+    private Mission generateCategoryMission(List<Object[]> visitData,
+                                            List<Object[]> spendingData,
+                                            long realWeeklyCategoryBudget,
+                                            long expectedSpending,
+                                            CategoryBudget categoryBudget) {
+        long requiredSaving = expectedSpending - realWeeklyCategoryBudget; // 줄여야 하는 금액
+        LocalDate startDate = LocalDate.now().plusDays(1); // 미션 시작일 (예: 내일)
+        LocalDate endDate = LocalDate.now().plusDays(7);   // 미션 종료일 (예: 1주일 후)
 
-
+        Mission visitMission = null;
+        Mission spendingMission = null;
         float visitGap = Float.MAX_VALUE;
         float spendingGap = Float.MAX_VALUE;
-        String title = null;
-        String advice = null;
-        String place = null;
-        long maxAllowedSpending = 0;
-        long maxAllowedVisits = 0;
 
-        // 방문 횟수 제한 미션
+        // 방문 제한 미션 생성 (visitData가 있을 경우)
         if (!visitData.isEmpty()) {
-//            Map.Entry<String, Float> targetVisit = sortedVisits.get(0);
-
-            //  랜덤으로 하나 선택
             Random random = new Random();
             Object[] targetVisit = visitData.get(random.nextInt(visitData.size()));
 
-            // 선택된 장소의 정보 가져오기
-            place = (String) targetVisit[0];   // 첫 번째 값 (payee)
-            float averageVisit = ((Number) targetVisit[1]).floatValue(); // 두 번째 값 (방문 횟수)
-            float averageCost = ((Number) targetVisit[2]).floatValue();
+            // 데이터 추출
+            String place = (String) targetVisit[0];                  // 예: 상점 이름
+            float averageVisit = ((Number) targetVisit[1]).floatValue();  // 평균 방문 횟수
+            float averageCost = ((Number) targetVisit[2]).floatValue();   // 평균 소비 금액
 
-            maxAllowedVisits = (long) Math.max(0, (realWeeklyCategoryBudget * 0.8) / averageCost); // 예산 내에서 최대 허용 방문 횟수
+            long maxAllowedVisits = 0;
+            if (averageCost != 0) {
+                maxAllowedVisits = (long) Math.max(0, (realWeeklyCategoryBudget * 0.8) / averageCost);
+            }
 
-            float expectedVisitSpending = maxAllowedVisits * averageCost; // 방문 조정 후 예상 소비 금액
-            float visitSpendingGap = Math.abs(realWeeklyCategoryBudget - expectedVisitSpending); // 허용 소비 금액과 차이 계산
+            float expectedVisitSpending = maxAllowedVisits * averageCost; // 방문 제한 후 예상 소비 금액
+            visitGap = Math.abs(realWeeklyCategoryBudget - expectedVisitSpending); // 예산과의 차이
 
-            // 새로운 `advice`와 `title` 구성
-            advice = "평균적으로 일주일에 " + String.format("%.1f", averageVisit) + "회 / " + String.format("%,.0f", averageCost) + "원 소비해요.\n"
-                    + (int) maxAllowedVisits + "회 이하로 줄이는 것은 어떨까요?";
+            String advice = "평균적으로 일주일에 " + String.format("%.1f", averageVisit) + "회 / " +
+                    String.format("%,.0f", averageCost) + "원 소비해요.\n 이번 주는 방문횟수를" +
+                    (int) maxAllowedVisits + "회 이하로 줄여볼까요?";
+            String title = place + (int) maxAllowedVisits + "회 이하 방문하기!";
 
-            title = place + (int) maxAllowedVisits + "회 이하 방문하기!";
-            visitGap = visitSpendingGap;
+            visitMission = new Mission(MissionType.VISIT, startDate, endDate, title, place, advice, categoryBudget, maxAllowedVisits);
+            System.out.println("Mission advice before saving: " + visitMission.getAdvice());
         }
 
-        // 금액 제한 미션
+        // 소비 제한 미션 생성 (spendingData가 있을 경우)
         if (!spendingData.isEmpty()) {
-            //  랜덤으로 하나 선택
             Random random = new Random();
-            Object[] targetSpending = spendingData.get(random.nextInt(visitData.size()));
+            Object[] targetSpending = spendingData.get(random.nextInt(spendingData.size()));
 
-            String spendingPlace = (String) targetSpending[0];   // 첫 번째 값 (payee)
-            float averageVisit = ((Number) targetSpending[1]).floatValue(); // 두 번째 값 (방문 횟수)
-            float averageCost = ((Number) targetSpending[2]).floatValue();
-            float spending = ((Number) targetSpending[3]).floatValue();
+            // 데이터 추출
+            String spendingPlace = (String) targetSpending[0];              // 소비 장소
+            float averageVisit = ((Number) targetSpending[1]).floatValue();   // 평균 방문 횟수
+            float averageCost = ((Number) targetSpending[2]).floatValue();    // 평균 소비 금액
+            float spending = ((Number) targetSpending[3]).floatValue();       // 총 소비 금액
 
-            maxAllowedSpending = (long) Math.max(realWeeklyCategoryBudget * 0.8, spending - (requiredSaving * 0.9)); // 허용된 범위 내에서 조절
-            maxAllowedSpending = (long) Math.min(spending, maxAllowedSpending); // 원래 소비 금액보다 크지 않도록 조절
+            // 소비 제한 계산
+            long maxAllowedSpending = (long) Math.max(realWeeklyCategoryBudget * 0.8, spending - (requiredSaving * 0.9));
+            maxAllowedSpending = (long) Math.min(spending, maxAllowedSpending);
+            spendingGap = Math.abs(realWeeklyCategoryBudget - maxAllowedSpending);
 
-            float spendingGapValue = Math.abs(realWeeklyCategoryBudget - maxAllowedSpending); // 허용 소비 금액과 차이 계산
+            String spendingAdvice = "평균적으로 일주일에 " + String.format("%.1f", averageVisit) + "회 지출하고, 지출할 때마다 " +
+                    String.format("%,.0f", averageCost) + "원 소비해요.\n 이번 주는" +
+                    (int) maxAllowedSpending + "원 이하로 소비하는 것은 어떨까요?";
+            String spendingTitle = spendingPlace + "에서 " + (int) maxAllowedSpending + "원 이하로 소비하기!";
 
-            String spendingAdvice = "평균적으로 일주일에 " + String.format("%.1f", averageVisit) + "회 지출하고, 지출할 때마다 " + String.format("%,.0f", averageCost) + "원 소비해요.\n"
-                    + (int) maxAllowedSpending + "원 이하로 소비하는 것은 어떨까요?";
-
-            String spendingTitle = place + "에서 " + (int) maxAllowedSpending + "원 이하로 소비하기!";
-            spendingGap = spendingGapValue;
-
-            // 🚀 방문 제한과 소비 제한 중 더 적절한 미션 선택
-            if (spendingGap < visitGap) {
-                MissionType missionType = MissionType.valueOf("EXPENSE");
-                advice = spendingAdvice;
-                title = spendingTitle;
-                place = spendingPlace;
-                return new Mission(missionType, startDate, endDate, title, place, advice, categoryBudget, maxAllowedSpending);
-            }
-            else {
-                MissionType missionType = MissionType.valueOf("VISIT");
-                return new Mission(missionType, startDate, endDate, title, place, advice, categoryBudget, maxAllowedVisits);
-            }
+            spendingMission = new Mission(MissionType.EXPENSE, startDate, endDate, spendingTitle, spendingPlace, spendingAdvice, categoryBudget, maxAllowedSpending);
+            System.out.println("Mission advice before saving: " + spendingMission.getAdvice());
         }
-        return null; //TODO 에러 처리 필요
+
+        // 두 미션 중 더 적합한 것을 선택하거나, 하나만 존재하는 경우 해당 미션 반환
+        Mission missionToSave = null;
+        if (visitMission != null && spendingMission != null) {
+            missionToSave = (spendingGap < visitGap) ? spendingMission : visitMission;
+        } else if (spendingMission != null) {
+            missionToSave = spendingMission;
+        } else if (visitMission != null) {
+            missionToSave = visitMission;
+        } else {
+            // 두 데이터 모두 없는 경우 예외 발생 (또는 원하는 기본 동작 적용)
+            throw new IllegalStateException("카테고리 미션 생성에 필요한 데이터가 없습니다.");
+        }
+
+        System.out.println("Saving mission with advice: " + missionToSave.getAdvice());
+        Mission savedMission = missionRepository.save(missionToSave);
+        System.out.println("After saving, advice = " + savedMission.getAdvice());
+        return savedMission;
     }
+
 
 
     /**
@@ -501,38 +565,20 @@ public class MissionService {
     /**
      * 특정 카테고리의 방문 횟수 데이터를 동기적으로 가져오기
      */
-    private List<Object[]> getTop3VisitDataByCategory(User user, ExpenseCategory category, LocalDate startDate, LocalDate endDate) {
+    private List<Object[]> getTop3VisitDataByCategory(User user, ExpenseCategory category, LocalDateTime startDate, LocalDateTime endDate) {
         List<Object[]> top3Visits  = transactionRepository.findVisitDataByCategory(user.getUserId(), category, startDate, endDate, (Pageable) PageRequest.of(0, 3));
+        System.out.println("top3Visits"+ top3Visits);
         return top3Visits; // null 체크 후 빈 맵 반환
     }
 
     /**
      * 특정 카테고리의 소비 데이터를 동기적으로 가져오기
      */
-    private List<Object[]> getTop3SpendingDataByCategory(User user, ExpenseCategory category, LocalDate startDate, LocalDate endDate) {
+    private List<Object[]> getTop3SpendingDataByCategory(User user, ExpenseCategory category, LocalDateTime startDate, LocalDateTime endDate) {
         List<Object[]> top3SpendingData = transactionRepository.findSpendingDataByCategory(user.getUserId(), category, startDate, endDate, (org.springframework.data.domain.Pageable) PageRequest.of(0, 3));
+        System.out.println("top3SpendingData"+ top3SpendingData);
         return top3SpendingData; // null 체크 후 빈 맵 반환
     }
-
-
-    // 특정 결제처의 방문 횟수 & 금액 가져오기
-    private Map<String, Float> getVisitDataByPayee(User user, String payee, LocalDate startDate, LocalDate endDate) {
-        Object[] result = transactionRepository.findWeeklyVisitAndSpendingByPayee(user.getUserId(), payee, startDate, endDate);
-        return convertToMap(result);
-    }
-
-
-    private Map<String, Float> convertToMap(Object[] result) {
-        if (result == null) {
-            return new HashMap<>();
-        }
-
-        Map<String, Float> map = new HashMap<>();
-        map.put("avgWeeklyVisits", ((Number) result[1]).floatValue()); // 평균 주별 방문 횟수
-        map.put("avgSpendingPerVisit", ((Number) result[2]).floatValue()); // 1회 방문당 평균 소비 금액
-        return map;
-    }
-
 
 
 }

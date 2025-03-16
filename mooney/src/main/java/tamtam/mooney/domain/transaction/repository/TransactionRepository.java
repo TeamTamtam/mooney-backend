@@ -88,8 +88,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 """)
     List<Object[]> findVisitDataByCategory(@Param("userId") Long userId,
                                            @Param("category") ExpenseCategory category,
-                                           @Param("startDate") LocalDate startDate,
-                                           @Param("endDate") LocalDate endDate, Pageable pageable);
+                                           @Param("startDate") LocalDateTime startDate,
+                                           @Param("endDate") LocalDateTime endDate, Pageable pageable);
 
 
     /*
@@ -127,8 +127,8 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 """)
     List<Object[]> findSpendingDataByCategory(@Param("userId") Long userId,
                                               @Param("category") ExpenseCategory category,
-                                              @Param("startDate") LocalDate startDate,
-                                              @Param("endDate") LocalDate endDate, Pageable pageable);
+                                              @Param("startDate") LocalDateTime startDate,
+                                              @Param("endDate") LocalDateTime endDate, Pageable pageable);
 
 
 
@@ -157,7 +157,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             "AND e.expenseCategory = :category")
     Optional<Long> getTotalCategoryExpenseAmountForMonth(@Param("user") User user,
                                                          @Param("category") ExpenseCategory category,
-                                                         @Param("startOfMonth") LocalDate startOfMonth,
+                                                         @Param("startOfMonth") LocalDateTime startOfMonth,
                                                          @Param("endOfMonth") LocalDateTime endOfMonth);
 
 
