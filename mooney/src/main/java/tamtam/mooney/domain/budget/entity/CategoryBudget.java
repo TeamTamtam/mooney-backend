@@ -28,6 +28,8 @@ public class CategoryBudget extends BaseTimeEntity {
     @OnDelete(action = OnDeleteAction.CASCADE)
     private MonthlyBudget monthlyBudget;
 
+    @Enumerated(EnumType.ORDINAL)  // DB에 숫자로 저장
+    @Column(nullable = false)
     @NotNull
     private ExpenseCategory expenseCategory;
 
