@@ -44,8 +44,8 @@ public class MissionService {
     private final WebClient webClient; // FastAPI 서버에서 데이터 가져오기 위한 클라이언트
     private final MonthlyBudgetRepository monthlyBudgetRepository;
 
-    //private static final String FASTAPI_URL = "https://mooney-ai.o-r.kr/predict"; // FastAPI URL
-    private static final String FASTAPI_URL = "http://127.0.0.1:8000/predict";
+    private static final String FASTAPI_URL = "https://mooney-ai.o-r.kr/predict"; // FastAPI URL
+    //private static final String FASTAPI_URL = "http://127.0.0.1:8000/predict";
     private final UserService userService;
 
 
@@ -329,23 +329,56 @@ public class MissionService {
     // 3️⃣ 특정 카테고리에 대해 현재 주별 예산과 비교 (모든 카테고리를 개별적으로 처리)
     private List<Map<String, Object>> compareWithWeeklyBudget(User user, List<Map<String, Object>> categoryDataList) {
         List<Map<String, Object>> result = new ArrayList<>();
-
+        List<Map<String, Object>> notSelectedResult = new ArrayList<>(); //카테고리가 3개 미만으로 뽑히는 상황 위해
+        System.out.println("compareWithWeeklyBudget\n\n");
+        System.out.println("categoryDataList: " + categoryDataList);
         for (Map<String, Object> categoryData : categoryDataList) {
             ExpenseCategory category = (ExpenseCategory) categoryData.get("Category");
-            long predictedSpending = ((Number) categoryData.get("yhat_adjusted")).longValue();
+            Object predictedSpendingObj = categoryData.get("yhat_adjusted");
+            Long predictedSpending;
+            if (predictedSpendingObj instanceof Number) {
+                predictedSpending = ((Number) predictedSpendingObj).longValue();
+            } else {
+                System.out.println("⚠️ 예상 소비값이 누락되었거나 올바르지 않습니다: " + predictedSpendingObj + " (카테고리: " + category + ")");
+                predictedSpending = 100000L;
+            }
+
             long realWeeklyCategoryBudget = calculateWeeklyBudget(user, category);
 
-            if (realWeeklyCategoryBudget < predictedSpending) {
-                Map<String, Object> categoryBudgetInfo = new HashMap<>();
-                categoryBudgetInfo.put("Category", category);
-                categoryBudgetInfo.put("WeeklyBudget", realWeeklyCategoryBudget);
-                categoryBudgetInfo.put("PredictedSpending", predictedSpending);
+            Map<String, Object> categoryBudgetInfo = new HashMap<>();
+            categoryBudgetInfo.put("Category", category);
+            categoryBudgetInfo.put("WeeklyBudget", realWeeklyCategoryBudget);
+            categoryBudgetInfo.put("PredictedSpending", predictedSpending);
 
+            if (realWeeklyCategoryBudget < predictedSpending) {
                 result.add(categoryBudgetInfo);
+            }
+            else{
+                notSelectedResult.add(categoryBudgetInfo);
             }
 
         }
+        if (result.size() < 3) {
+            notSelectedResult.sort(Comparator.comparingLong((Map<String, Object> cat) -> {
+                Object predictedSpendingObj = cat.get("PredictedSpending");
+                Object weeklyBudgetObj = cat.get("WeeklyBudget");
+
+                // 🔹 null 체크 및 기본값 설정
+                long predictedSpending = (predictedSpendingObj instanceof Number) ? ((Number) predictedSpendingObj).longValue() : 0L;
+                long weeklyBudget = (weeklyBudgetObj instanceof Number) ? ((Number) weeklyBudgetObj).longValue() : 0L;
+
+                return predictedSpending - weeklyBudget; // 예산 초과 정도가 큰 순으로 정렬 (내림차순)
+            }).reversed()); //  내림차순 정렬 적용
+
+            int i = 0;
+            while (result.size() < 3 && i < notSelectedResult.size()) {
+                result.add(notSelectedResult.get(i));
+                i++;
+            }
+        }
+
         return result;
+
     }
 
     //3.
@@ -394,11 +427,10 @@ public class MissionService {
         System.out.println("Current Month 시작 : " + currentMonthStart.format(DateTimeFormatter.ISO_LOCAL_DATE));
 
         List<Map<String, Object>> categoryDataList = getSelectedCategories(user);
-        System.out.println(categoryDataList);
 
         List<String> missionTitles = new ArrayList<>();
 
-        System.out.println(categoryDataList);
+        System.out.println("categoryDataList 길이" + categoryDataList.size());
         for (Map<String, Object> categoryData : categoryDataList) {
             System.out.println(categoryData);
 
@@ -429,7 +461,6 @@ public class MissionService {
             if(mission == null) {
                 throw new IllegalStateException("미션 생성 실패: category=" + category);
             }
-            System.out.println(mission.getAdvice());
             missionTitles.add(mission.getTitle());
 
         }
@@ -498,9 +529,9 @@ public class MissionService {
             visitGap = Math.abs(realWeeklyCategoryBudget - expectedVisitSpending); // 예산과의 차이
 
             String advice = "평균적으로 일주일에 " + String.format("%.1f", averageVisit) + "회 / " +
-                    String.format("%,.0f", averageCost) + "원 소비해요.\n 이번 주는 방문횟수를" +
+                    String.format("%,.0f", averageCost) + "원 소비해요.\n 이번 주는 방문횟수를 " +
                     (int) maxAllowedVisits + "회 이하로 줄여볼까요?";
-            String title = place + (int) maxAllowedVisits + "회 이하 방문하기!";
+            String title = place +"를 "+ (int) maxAllowedVisits + "회 이하 소비하기!";
 
             visitMission = new Mission(MissionType.VISIT, startDate, endDate, title, place, advice, categoryBudget, maxAllowedVisits);
             System.out.println("Mission advice before saving: " + visitMission.getAdvice());
@@ -523,7 +554,7 @@ public class MissionService {
             spendingGap = Math.abs(realWeeklyCategoryBudget - maxAllowedSpending);
 
             String spendingAdvice = "평균적으로 일주일에 " + String.format("%.1f", averageVisit) + "회 지출하고, 지출할 때마다 " +
-                    String.format("%,.0f", averageCost) + "원 소비해요.\n 이번 주는" +
+                    String.format("%,.0f", averageCost) + "원 소비해요.\n 이번 주는 " +
                     (int) maxAllowedSpending + "원 이하로 소비하는 것은 어떨까요?";
             String spendingTitle = spendingPlace + "에서 " + (int) maxAllowedSpending + "원 이하로 소비하기!";
 
@@ -544,9 +575,7 @@ public class MissionService {
             throw new IllegalStateException("카테고리 미션 생성에 필요한 데이터가 없습니다.");
         }
 
-        System.out.println("Saving mission with advice: " + missionToSave.getAdvice());
         Mission savedMission = missionRepository.save(missionToSave);
-        System.out.println("After saving, advice = " + savedMission.getAdvice());
         return savedMission;
     }
 
@@ -567,7 +596,7 @@ public class MissionService {
      */
     private List<Object[]> getTop3VisitDataByCategory(User user, ExpenseCategory category, LocalDateTime startDate, LocalDateTime endDate) {
         List<Object[]> top3Visits  = transactionRepository.findVisitDataByCategory(user.getUserId(), category, startDate, endDate, (Pageable) PageRequest.of(0, 3));
-        System.out.println("top3Visits"+ top3Visits);
+
         return top3Visits; // null 체크 후 빈 맵 반환
     }
 
@@ -576,7 +605,7 @@ public class MissionService {
      */
     private List<Object[]> getTop3SpendingDataByCategory(User user, ExpenseCategory category, LocalDateTime startDate, LocalDateTime endDate) {
         List<Object[]> top3SpendingData = transactionRepository.findSpendingDataByCategory(user.getUserId(), category, startDate, endDate, (org.springframework.data.domain.Pageable) PageRequest.of(0, 3));
-        System.out.println("top3SpendingData"+ top3SpendingData);
+
         return top3SpendingData; // null 체크 후 빈 맵 반환
     }
 
