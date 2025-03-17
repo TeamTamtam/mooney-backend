@@ -64,6 +64,8 @@ dependencies {
     implementation 'org.springframework.ai:spring-ai-openai:1.0.0-M6'
     //netty-resolver-dns-native-macos
     runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.1.119.Final:osx-aarch_64'
+    //LocalDateTime 직렬화 위해
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 }
 
 dependencyManagement {

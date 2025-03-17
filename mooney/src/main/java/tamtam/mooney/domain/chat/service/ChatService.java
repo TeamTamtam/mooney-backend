@@ -10,6 +10,7 @@ import tamtam.mooney.domain.budget.entity.MonthlyBudget;
 import tamtam.mooney.domain.budget.service.CategoryBudgetService;
 import tamtam.mooney.domain.budget.service.MonthlyBudgetService;
 import tamtam.mooney.domain.chat.dto.ChatBudgetInfoDto;
+import tamtam.mooney.domain.chat.dto.ChatMessage;
 import tamtam.mooney.domain.chat.dto.ChatRequestDto;
 import tamtam.mooney.domain.chat.dto.ChatResponseDto;
 import tamtam.mooney.domain.transaction.service.TransactionService;
@@ -17,10 +18,13 @@ import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.service.UserService;
 import tamtam.mooney.global.openai.OpenAIOptionEnum;
 import tamtam.mooney.global.openai.OpenAIService;
+import tamtam.mooney.global.redis.GenericRedisRepository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -33,15 +37,44 @@ public class ChatService {
     private final MonthlyBudgetService monthlyBudgetService;
     private final CategoryBudgetService categoryBudgetService;
     private final TransactionService transactionService;
+    private final GenericRedisRepository<ChatMessage> chatRedisRepository;
+
+    // 채팅 저장
+    public void saveChatMessage(String userId, String message, String role) {
+        ChatMessage chatMessage = new ChatMessage(
+                UUID.randomUUID().toString(),
+                userId,
+                role,
+                message,
+                LocalDateTime.now()
+        );
+        chatRedisRepository.save("chat:" + userId, chatMessage);
+    }
+
+
+    @Transactional(readOnly = true)
+    public List<ChatMessage> getChatHistory(String userId) {
+        return chatRedisRepository.findAll("chat:" + userId);
+    }
+
 
     public ChatResponseDto chat(ChatRequestDto requestDto) {
         User user = userService.getCurrentUser();
+
+        // 예산 정보 조회
         List<ChatBudgetInfoDto> budgetInfoDtos = getCategoryBudgetRemainingAmount(user);
-        StringBuilder stringBuilder = new StringBuilder();
-        for (ChatBudgetInfoDto dto : budgetInfoDtos) {
-            stringBuilder.append(String.format("- %s: %d원 남음\n", dto.categoryName(), dto.remaining()));
-        }
-        return new ChatResponseDto(generateGPTResponseForChat(user, requestDto.message(), stringBuilder.toString()));
+        String budgetInfoString = budgetInfoDtos.stream()
+                .map(dto -> String.format("- %s: %d원 남음\n", dto.categoryName(), dto.remaining()))
+                .collect(Collectors.joining());
+
+        // GPT 응답 생성
+        String gptResponse = generateGPTResponseForChat(user, requestDto.message(), budgetInfoString);
+
+        // Redis에 채팅 내역 저장
+        saveChatMessage(user.getUserId().toString(), requestDto.message(), "USER");
+        saveChatMessage(user.getUserId().toString(), gptResponse, "GPT");
+
+        return new ChatResponseDto(gptResponse);
     }
 
     @Transactional(readOnly = true)
