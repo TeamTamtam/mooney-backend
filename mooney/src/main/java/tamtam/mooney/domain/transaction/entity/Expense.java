@@ -16,7 +16,8 @@ public class Expense extends Transaction {
 
     private String payee;
 
-    @NotNull
+    @Column(nullable = false)
+    @Enumerated(EnumType.ORDINAL)  // DB에 숫자로 저장
     private ExpenseCategory expenseCategory;
 
     @Builder

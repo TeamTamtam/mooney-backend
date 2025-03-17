@@ -54,6 +54,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     //cache
     implementation 'org.springframework.boot:spring-boot-starter-cache'
+    //Webclient
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    // Apache POI for Excel (XLSX 파일 읽기)
+    implementation 'org.apache.poi:poi-ooxml:5.2.3'
     //spring ai
     implementation 'org.springframework.ai:spring-ai-openai:1.0.0-M6'
 }

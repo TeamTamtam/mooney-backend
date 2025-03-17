@@ -33,7 +33,7 @@ public class CategoryBudgetService {
 
     @Transactional(readOnly = true)
     public List<CategoryBudget> findByMonthlyBudget(MonthlyBudget monthlyBudget) {
-        return categoryBudgetRepository.findByMonthlyBudget(monthlyBudget);
+        return categoryBudgetRepository.findCategoryBudgetByMonthlyBudget(monthlyBudget);
     }
 
     @Transactional(readOnly = true)
