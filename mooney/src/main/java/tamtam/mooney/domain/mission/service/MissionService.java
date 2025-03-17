@@ -1,5 +1,7 @@
 package tamtam.mooney.domain.mission.service;
 
+import com.google.gson.Gson;
+import jakarta.persistence.Column;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -224,6 +226,9 @@ public class MissionService {
     private List<Map<String, Object>> fetchPredictedSpending(User user) {
         // 백엔드에서 12주 집계 데이터를 가져옴
         List<Map<String, Object>> aggregatedData = fetchAggregatedWeeklyData(user);
+
+        // ✅ FastAPI에 보낼 JSON 데이터 출력
+        // System.out.println("🚀 Sending JSON to FastAPI: " + new Gson().toJson(aggregatedData));
 
         Map<String, Object> requestBody = Map.of("data", aggregatedData);
 
