@@ -19,8 +19,8 @@ public class MonthlyBudgetService {
     private final MonthlyBudgetRepository monthlyBudgetRepository;
 
     @Transactional(readOnly = true)
-    public MonthlyBudget getMonthlyBudget(User user, LocalDate monthDate) {
-        return monthlyBudgetRepository.findByUserAndMonthDate(user, monthDate)
+    public MonthlyBudget getMonthlyBudget(User user, LocalDate startOfMonth) {
+        return monthlyBudgetRepository.findByUserAndMonthDate(user, startOfMonth)
                 .orElseThrow(() -> new CustomException(ErrorCode.RESOURCE_NOT_FOUND));
     }
 

@@ -3,6 +3,9 @@ package tamtam.mooney.domain.transaction.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tamtam.mooney.domain.mission.entity.Mission;
+import tamtam.mooney.domain.mission.repository.MissionRepository;
+import tamtam.mooney.domain.mission.service.MissionService;
 import tamtam.mooney.domain.transaction.dto.ExpenseAddRequestDto;
 import tamtam.mooney.domain.transaction.entity.Expense;
 import tamtam.mooney.domain.enums.ExpenseCategory;
@@ -12,6 +15,7 @@ import tamtam.mooney.domain.user.service.UserService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional
@@ -21,6 +25,8 @@ public class ExpenseService {
     private final TransactionRepository transactionRepository;
     private final UserService userService;
     // private final LlmCategoryClassifier llmCategoryClassifier;
+    private final MissionRepository missionRepository;
+    private final MissionService missionService;
 
     // 지출 추가
     public String createExpense(ExpenseAddRequestDto request) {
@@ -41,6 +47,10 @@ public class ExpenseService {
                 .build();
 
         transactionRepository.save(expense);
+
+        //들어온 지출의 payee가 현재 진행중인 미션 place에 해당된다면 missionRepo에 save
+        missionService.updateMission(user, request.payee(),request.amount() );
+
         return expense.getExpenseCategory().name();
     }
 
