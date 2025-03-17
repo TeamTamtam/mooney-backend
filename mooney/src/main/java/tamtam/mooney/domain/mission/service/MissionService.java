@@ -19,12 +19,9 @@ import tamtam.mooney.domain.user.dto.UserHomeWeeklyMissionDto;
 import tamtam.mooney.domain.user.entity.User;
 import org.springframework.core.ParameterizedTypeReference;
 import tamtam.mooney.domain.user.service.UserService;
-
-import java.security.Timestamp;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAdjusters;
@@ -43,7 +40,6 @@ public class MissionService {
     private final MonthlyBudgetRepository monthlyBudgetRepository;
 
     private static final String FASTAPI_URL = "https://mooney-ai.o-r.kr/predict"; // FastAPI URL
-    //private static final String FASTAPI_URL = "http://127.0.0.1:8000/predict";
     private final UserService userService;
 
 
