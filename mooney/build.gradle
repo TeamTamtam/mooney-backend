@@ -58,8 +58,6 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     // Apache POI for Excel (XLSX 파일 읽기)
     implementation 'org.apache.poi:poi-ooxml:5.2.3'
-    //gson
-    implementation 'com.google.code.gson:gson:2.7'
     //Spring AI
     implementation 'org.springframework.ai:spring-ai-openai:1.0.0-M6'
     //netty-resolver-dns-native-macos
