@@ -46,8 +46,6 @@ dependencies {
     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.0.2'
     //json
     implementation 'org.json:json:20231013'
-    //LangChain4j Core
-    implementation 'dev.langchain4j:langchain4j-open-ai-spring-boot-starter:0.36.2'
     //jjwt
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
@@ -58,10 +56,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-cache'
     //Webclient
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
-
     // Apache POI for Excel (XLSX 파일 읽기)
     implementation 'org.apache.poi:poi-ooxml:5.2.3'
-
+    //Spring AI
+    implementation 'org.springframework.ai:spring-ai-openai:1.0.0-M6'
+    //netty-resolver-dns-native-macos
+    runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.1.119.Final:osx-aarch_64'
+    //LocalDateTime 직렬화 위해
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 }
 
 dependencyManagement {

@@ -37,12 +37,12 @@ public class CategoryBudgetService {
     }
 
     @Transactional(readOnly = true)
-    public List<CategoryBudgetProgressUnitDto> getCategoryBudgetProgresses(User user, MonthlyBudget monthlyBudget, LocalDate startOfMonth, LocalDate endOfMonth) {
+    public List<CategoryBudgetProgressUnitDto> getCategoryBudgetProgresses(User user, MonthlyBudget monthlyBudget, LocalDate startOfMonth) {
         // 요청된 월의 카테고리별 예산 조회
         List<CategoryBudget> budgets = findByMonthlyBudget(monthlyBudget);
 
         // 특정 기간 동안의 모든 카테고리별 총 지출
-        Map<String, Long> totalExpensesByCategory = transactionService.mapTotalExpenseForAllCategories(user, startOfMonth, endOfMonth);
+        Map<String, Long> totalExpensesByCategory = transactionService.mapTotalExpenseForAllCategories(user, startOfMonth);
 
         // 각 카테고리의 실제 지출 계산
         return budgets.stream()
@@ -65,13 +65,12 @@ public class CategoryBudgetService {
     public List<CategoryBudgetPlanUnitDto> getCategoryBudgetPlans(User user, MonthlyBudget monthlyBudget, LocalDate startOfMonth) {
         // 지난달의 시작일과 종료일 계산
         LocalDate lastMonthStart = startOfMonth.minusMonths(1);
-        LocalDate lastMonthEnd = lastMonthStart.withDayOfMonth(lastMonthStart.lengthOfMonth());
 
         // 요청된 월의 카테고리별 예산 조회
         List<CategoryBudget> budgets = findByMonthlyBudget(monthlyBudget);
 
         // 지난달 모든 카테고리의 총 지출
-        Map<String, Long> lastMonthExpensesByCategory = transactionService.mapTotalExpenseForAllCategories(user, lastMonthStart, lastMonthEnd);
+        Map<String, Long> lastMonthExpensesByCategory = transactionService.mapTotalExpenseForAllCategories(user, lastMonthStart);
 
         // 각 카테고리별 예산 계획 생성
         return budgets.stream()
