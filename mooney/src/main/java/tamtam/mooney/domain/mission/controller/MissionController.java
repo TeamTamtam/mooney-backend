@@ -2,22 +2,15 @@ package tamtam.mooney.domain.mission.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import tamtam.mooney.domain.mission.dto.MissionDto;
 import tamtam.mooney.domain.mission.dto.MissionTabDto;
 import tamtam.mooney.domain.mission.service.MissionService;
-import tamtam.mooney.domain.transaction.dto.MonthlyTransactionDayUnitDto;
-import tamtam.mooney.domain.user.dto.UserHomeWeeklyMissionDto;
-import tamtam.mooney.domain.user.entity.User;
-
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Tag(name = "Mission")
@@ -39,12 +32,12 @@ public class MissionController {
         return ResponseEntity.ok(missionTabDto);
     }
 
-    @Operation(summary = "이번주 미션 받기")
-    @GetMapping("/new")
-    public ResponseEntity<List<String>> getNewMission() {
-        List<String> weeklyMissionDto = missionService.generateWeeklyMissions();
-        return ResponseEntity.ok(weeklyMissionDto);
-    }
+//    @Operation(summary = "이번주 미션 받기")
+//    @GetMapping("/new")
+//    public ResponseEntity<List<String>> getNewMission() {
+//        List<String> weeklyMissionDto = missionService.generateWeeklyMissions();
+//        return ResponseEntity.ok(weeklyMissionDto);
+//    }
 
 
 
