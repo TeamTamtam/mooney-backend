@@ -9,13 +9,17 @@ import tamtam.mooney.domain.budget.dto.CategoryBudgetProgressUnitDto;
 import tamtam.mooney.domain.budget.entity.CategoryBudget;
 import tamtam.mooney.domain.budget.entity.MonthlyBudget;
 import tamtam.mooney.domain.budget.repository.CategoryBudgetRepository;
+import tamtam.mooney.domain.enums.ExpenseCategory;
 import tamtam.mooney.domain.transaction.service.TransactionService;
 import tamtam.mooney.domain.user.entity.User;
 
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Transactional
@@ -25,11 +29,20 @@ public class CategoryBudgetService {
     private final TransactionService transactionService;
 
     public void saveCategoryBudgets(MonthlyBudget monthlyBudget, List<CategoryBudgetSimpleUnitDto> categoryBudgets) {
-        List<CategoryBudget> budgetList = categoryBudgets.stream()
-                .map(dto -> new CategoryBudget(monthlyBudget, dto.expenseCategory(), dto.amount()))
-                .toList();
-        categoryBudgetRepository.saveAll(budgetList); // Batch insert 사용
+        Set<ExpenseCategory> existingCategories = categoryBudgets.stream()
+                .map(CategoryBudgetSimpleUnitDto::expenseCategory)
+                .collect(Collectors.toSet());
+
+        List<CategoryBudget> budgetList = Stream.concat(
+                categoryBudgets.stream().map(dto -> new CategoryBudget(monthlyBudget, dto.expenseCategory(), dto.amount())),
+                Arrays.stream(ExpenseCategory.values())
+                        .filter(category -> !existingCategories.contains(category))
+                        .map(category -> new CategoryBudget(monthlyBudget, category, 0))
+        ).toList();
+
+        categoryBudgetRepository.saveAll(budgetList);
     }
+
 
     @Transactional(readOnly = true)
     public List<CategoryBudget> findByMonthlyBudget(MonthlyBudget monthlyBudget) {
