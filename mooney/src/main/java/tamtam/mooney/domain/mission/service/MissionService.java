@@ -19,12 +19,9 @@ import tamtam.mooney.domain.user.dto.UserHomeWeeklyMissionDto;
 import tamtam.mooney.domain.user.entity.User;
 import org.springframework.core.ParameterizedTypeReference;
 import tamtam.mooney.domain.user.service.UserService;
-
-import java.security.Timestamp;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAdjusters;
@@ -40,10 +37,7 @@ public class MissionService {
     private final TransactionRepository transactionRepository;
     private final CategoryBudgetRepository categoryBudgetRepository;
     private final WebClient webClient; // FastAPI 서버에서 데이터 가져오기 위한 클라이언트
-    private final MonthlyBudgetRepository monthlyBudgetRepository;
-
     private static final String FASTAPI_URL = "https://mooney-ai.o-r.kr/predict"; // FastAPI URL
-    //private static final String FASTAPI_URL = "http://127.0.0.1:8000/predict";
     private final UserService userService;
 
 
@@ -408,7 +402,7 @@ public class MissionService {
      * "WeeklyBudget", realWeeklyCategoryBudget,
      * "PredictedSpending", predictedSpending
      **/
-    public List<String> generateWeeklyMissions() {
+    public List<String> generateWeeklyMissions(LocalDate missionStartDate) {
         User user = userService.getCurrentUser();
         long userId = user.getUserId();
 
@@ -444,13 +438,17 @@ public class MissionService {
             // 사용자 카테고리 예산 조회
             CategoryBudget categoryBudget = getUserCategoryBudget(userId, category, currentMonthStart);
 
+            //다음주 미션이 이미 있으면 생성 안되게
+            checkUserHasNextWeekMission(userId, now);
+
             // 미션 생성
-            Mission mission = generateCategoryMission(
+            Mission mission = generateCategoryMission( //여기서 missionReposiotry에 save
                     getTop3VisitDataByCategory(user, category, startDate, endDate),
                     getTop3SpendingDataByCategory(user, category, startDate, endDate),
                     realWeeklyCategoryBudget,
                     predictedSpending,
-                    categoryBudget
+                    categoryBudget,
+                    missionStartDate
             );
 
             if(mission == null) {
@@ -460,6 +458,16 @@ public class MissionService {
 
         }
         return missionTitles;
+    }
+
+    private void checkUserHasNextWeekMission(long userId, LocalDate now) {
+        LocalDate nextWeekStart = now.plusWeeks(1).with(java.time.DayOfWeek.MONDAY); // 다음 주 월요일
+        LocalDate nextWeekEnd = nextWeekStart.plusDays(6);
+        long nextWeekMissionCount = missionRepository.countNextWeekMissionsByUser(userId, nextWeekStart, nextWeekEnd);
+
+        if (nextWeekMissionCount > 0) {
+            throw new IllegalStateException("다음 주 미션이 이미 존재합니다. userId=" + userId);
+        }
     }
 
     // 헬퍼 메서드: ExpenseCategory 추출
@@ -495,10 +503,10 @@ public class MissionService {
                                             List<Object[]> spendingData,
                                             long realWeeklyCategoryBudget,
                                             long expectedSpending,
-                                            CategoryBudget categoryBudget) {
+                                            CategoryBudget categoryBudget, LocalDate startDate) {
         long requiredSaving = expectedSpending - realWeeklyCategoryBudget; // 줄여야 하는 금액
-        LocalDate startDate = LocalDate.now().plusDays(1); // 미션 시작일 (예: 내일)
-        LocalDate endDate = LocalDate.now().plusDays(7);   // 미션 종료일 (예: 1주일 후)
+        //LocalDate startDate = LocalDate.now().plusDays(1); // 미션 시작일 (예: 내일)
+        LocalDate endDate = startDate.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY));   // 미션 종료일 (startDate의 주의 일요일)
 
         Mission visitMission = null;
         Mission spendingMission = null;
