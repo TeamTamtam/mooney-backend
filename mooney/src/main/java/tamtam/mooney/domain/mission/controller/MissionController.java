@@ -10,6 +10,9 @@ import tamtam.mooney.domain.mission.dto.MissionDto;
 import tamtam.mooney.domain.mission.dto.MissionTabDto;
 import tamtam.mooney.domain.mission.service.MissionScheduler;
 import tamtam.mooney.domain.mission.service.MissionService;
+import tamtam.mooney.domain.user.entity.User;
+import tamtam.mooney.domain.user.service.UserService;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -21,6 +24,7 @@ public class MissionController {
 
     private final MissionService missionService;
     private final MissionScheduler missionScheduler;
+    private final UserService userService;
 
     @Operation(summary = "미션창 조회(배경, 미션 현황 업데이트)")
     @GetMapping("")
@@ -33,10 +37,11 @@ public class MissionController {
         return ResponseEntity.ok(missionTabDto);
     }
 
-    @Operation(summary = "미션 스케줄링 강제로 수행하기")
+    @Operation(summary = "해당 사용자에 대해서만 미션 스케줄링 강제로 수행하기")
     @PostMapping("/run")
     public ResponseEntity<List<String>> getNewMission(@RequestParam LocalDate startDate) {
-        List<String> newMissions = missionScheduler.runSchedulerManually(startDate);
+        User user = userService.getCurrentUser();
+        List<String> newMissions = missionScheduler.runSchedulerManually(user, startDate);
         return ResponseEntity.ok(newMissions);
     }
 
