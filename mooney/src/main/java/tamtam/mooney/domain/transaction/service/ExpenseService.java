@@ -49,7 +49,7 @@ public class ExpenseService {
         transactionRepository.save(expense);
 
         //들어온 지출의 payee가 현재 진행중인 미션 place에 해당된다면 missionRepo에 save
-        missionService.updateMission(user, request.payee(),request.amount() );
+        missionService.updateMission(user, request.payee(),request.amount());
 
         return expense.getExpenseCategory().name();
     }

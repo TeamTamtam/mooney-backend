@@ -88,7 +88,12 @@ public class MissionService {
         List<Mission> missions = missionRepository.findWeeklyMissionsByUser(user.getUserId(), today);
         int currentDayOfWeek = today.getDayOfWeek().getValue();
         float sum = 0;
+        System.out.println("📌 오늘 요일: " + currentDayOfWeek);
         for(Mission mission : missions){
+            System.out.println("📌 미션 종류: " + mission.getMissionType());
+
+            System.out.println("📌 소비액: " + mission.getAmountOfExpense() + ", 방문횟수: " + mission.getNumOfExpense());
+
             float result = 0;
             if(mission.getMissionType().equals("VISIT")){ //방문 기반 미션
                 result = calculateVisitMissionScore(mission.getMax(), mission.getNumOfExpense(), currentDayOfWeek);
@@ -96,6 +101,7 @@ public class MissionService {
             else{
                 result = calculateSpendingMissionScore(mission.getMax(), mission.getAmountOfExpense(), currentDayOfWeek);
             }
+
             mission.updateResult(result);
             sum += result;
         }
@@ -116,35 +122,33 @@ public class MissionService {
      */
     public float calculateVisitMissionScore(long maxVisitsAllowed, long currentVisits, int currentDayOfWeek) {
         float baseScore = 3.0f;
-        // 일주일 진행 비율 계산 (예: 월요일이면 1/7, 일요일이면 7/7)
         float weekProgress = currentDayOfWeek / 7.0f;
         float expectedVisits = maxVisitsAllowed * weekProgress;
-
-        // 주간 진행률을 토대로 예측 방문 횟수 (현재 진행률이 0이 아니면)
         float predictedVisits = (weekProgress > 0) ? (currentVisits / weekProgress) : currentVisits;
+
+        // ✅ 첫날 & 아무 행동 없을 때만 3.0 고정
+        if (currentDayOfWeek == 1 && currentVisits == 0) {
+            return baseScore;
+        }
 
         float adjustment = 0.0f;
 
-        // 현재 방문이 기대치보다 적으면 긍정적 평가 (보너스)
-        if (currentVisits < expectedVisits) {
-            // 예상치 대비 얼마나 적은지 비율 산출 (예: 20% 미만이면 보너스가 커짐)
+        if (currentVisits < expectedVisits && expectedVisits > 0) {
             float diffRatio = (expectedVisits - currentVisits) / expectedVisits;
-            adjustment = 2.0f * diffRatio;  // 최대 보너스는 +2점 정도
-        } else {
-            // 현재 방문이 기대치를 초과하면 감점
+            adjustment = 2.0f * diffRatio;
+        } else if (currentVisits > expectedVisits) {
             float diff = currentVisits - expectedVisits;
-            adjustment = (diff > 1 ? -1.5f : -1.0f);
+            adjustment = -1.5f; // 감점은 고정으로
         }
 
-        // 추가로, 주간 추세로 예측한 방문 횟수가 최대 허용치보다 크다면 추가 감점
         if (predictedVisits > maxVisitsAllowed) {
             float overageRatio = (predictedVisits - maxVisitsAllowed) / maxVisitsAllowed;
             adjustment -= 1.5f * overageRatio;
         }
 
-        float score = baseScore + adjustment;
-        return clamp(score, 1.0f, 5.0f);
+        return clamp(baseScore + adjustment, 1.0f, 5.0f);
     }
+
 
     /**
      * 소비 기반 미션 점수 계산 (예: "이번 주 올리브영에서 10,000원 이하 소비")
@@ -159,31 +163,31 @@ public class MissionService {
         float baseScore = 3.0f;
         float weekProgress = currentDayOfWeek / 7.0f;
         float expectedSpending = maxSpendingAllowed * weekProgress;
-
-        // 주간 진행률을 토대로 예측 소비액 계산
         float predictedSpending = (weekProgress > 0) ? (currentSpending / weekProgress) : currentSpending;
+
+        // ✅ 첫날 & 소비가 0일 때만 3.0 고정
+        if (currentDayOfWeek == 1 && currentSpending == 0) {
+            return baseScore;
+        }
 
         float adjustment = 0.0f;
 
-        // 현재 소비액이 예상 소비액보다 낮으면 보너스
-        if (currentSpending < expectedSpending) {
+        if (currentSpending < expectedSpending && expectedSpending > 0) {
             float diffRatio = (expectedSpending - currentSpending) / expectedSpending;
             adjustment = 2.0f * diffRatio;
-        } else {
-            // 소비액이 예상 소비액보다 높으면 감점
+        } else if (currentSpending > expectedSpending) {
             float diff = currentSpending - expectedSpending;
-            adjustment = (diff > (expectedSpending * 0.5f) ? -1.5f : -1.0f);
+            adjustment = -1.5f; // 고정 감점
         }
 
-        // 예측 소비액이 최대 허용액을 초과할 경우 추가 감점
         if (predictedSpending > maxSpendingAllowed) {
             float overageRatio = (predictedSpending - maxSpendingAllowed) / maxSpendingAllowed;
             adjustment -= 1.5f * overageRatio;
         }
 
-        float score = baseScore + adjustment;
-        return clamp(score, 1.0f, 5.0f);
+        return clamp(baseScore + adjustment, 1.0f, 5.0f);
     }
+
 
     /**
      * 점수를 주어진 범위 내로 클램핑하는 유틸리티 메서드
@@ -198,7 +202,6 @@ public class MissionService {
         if (value > max) return max;
         return value;
     }
-
 
 
 
@@ -402,8 +405,8 @@ public class MissionService {
      * "WeeklyBudget", realWeeklyCategoryBudget,
      * "PredictedSpending", predictedSpending
      **/
-    public List<String> generateWeeklyMissions(LocalDate missionStartDate) {
-        User user = userService.getCurrentUser();
+    public List<String> generateWeeklyMissions(User user, LocalDate missionStartDate) {
+        //User user = userService.getCurrentUser();
         long userId = user.getUserId();
 
         // 현재 날짜 관련 변수 미리 선언
@@ -428,6 +431,11 @@ public class MissionService {
 
             // PredictedSpending 추출 (없으면 기본값 0L)
             Long predictedSpending = extractPredictedSpending(categoryData);
+
+            // ✅ 하한선 적용 (예: 최소 1,000원)
+            long minPredictedSpending = 1000L;
+            predictedSpending = Math.max(predictedSpending, minPredictedSpending);
+
 
             // realWeeklyCategoryBudget 계산
             Long realWeeklyCategoryBudget = calculateWeeklyBudget(user, category);
@@ -581,7 +589,6 @@ public class MissionService {
         Mission savedMission = missionRepository.save(missionToSave);
         return savedMission;
     }
-
 
 
     /**
