@@ -38,6 +38,7 @@ public class MissionService {
     private final CategoryBudgetRepository categoryBudgetRepository;
     private final WebClient webClient; // FastAPI 서버에서 데이터 가져오기 위한 클라이언트
     private static final String FASTAPI_URL = "https://mooney-ai.o-r.kr/predict"; // FastAPI URL
+    //private static final String FASTAPI_URL = "http://127.0.0.1:8000/predict";
     private final UserService userService;
 
 
@@ -88,11 +89,10 @@ public class MissionService {
         List<Mission> missions = missionRepository.findWeeklyMissionsByUser(user.getUserId(), today);
         int currentDayOfWeek = today.getDayOfWeek().getValue();
         float sum = 0;
-        System.out.println("📌 오늘 요일: " + currentDayOfWeek);
+        System.out.println("오늘 요일: " + currentDayOfWeek);
         for(Mission mission : missions){
-            System.out.println("📌 미션 종류: " + mission.getMissionType());
-
-            System.out.println("📌 소비액: " + mission.getAmountOfExpense() + ", 방문횟수: " + mission.getNumOfExpense());
+            System.out.println("미션 종류: " + mission.getMissionType());
+            System.out.println("소비액: " + mission.getAmountOfExpense() + ", 방문횟수: " + mission.getNumOfExpense());
 
             float result = 0;
             if(mission.getMissionType().equals("VISIT")){ //방문 기반 미션
@@ -209,10 +209,10 @@ public class MissionService {
     //# FastAPI 서버에서 카테고리 및 예상 지출 금액을 가져와 현재 주별 예산과 비교하는 동기 메서드(1~3 포함)
     // => 지출 > 예상인 카테고리에 한해 카테고리, realWeeklyCategoryBudget, predictedSpending을 return
      private List<Map<String, Object>> getSelectedCategories(User user) {
-         // 1️⃣ FastAPI에서 예상 지출 데이터 가져오기 (동기 방식)
+         // FastAPI에서 예상 지출 데이터 가져오기 (동기 방식)
          List<Map<String, Object>> categoryDataList = fetchPredictedSpending(user);
 
-         // 2️⃣ 주별 예산과 비교하여 데이터 반환
+         // 2주별 예산과 비교하여 데이터 반환
          return compareWithWeeklyBudget(user, categoryDataList);
      }
 
@@ -231,12 +231,12 @@ public class MissionService {
                 .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
                 .block();
 
-        System.out.println("✅ Received Response from FastAPI: " + response);
+        System.out.println("Received Response from FastAPI: " + response);
 
-        // 🔥 "predict_results" 키에서 실제 데이터를 추출하여 리스트로 변환
+        // "predict_results" 키에서 실제 데이터를 추출하여 리스트로 변환
         List<Map<String, Object>> predictResults = (List<Map<String, Object>>) response.get("predict_results");
 
-        // 🔥 String을 ExpenseCategory Enum으로 변환
+        // String을 ExpenseCategory Enum으로 변환
         List<Map<String, Object>> convertedResults = predictResults.stream().map(entry -> {
             Map<String, Object> newEntry = new HashMap<>(entry);
             String categoryStr = (String) entry.get("Category"); // 🔥 FastAPI에서 온 문자열
@@ -251,7 +251,7 @@ public class MissionService {
             return newEntry;
         }).collect(Collectors.toList());
 
-        System.out.println("✅ Converted Prediction Results: " + convertedResults);
+        System.out.println("Converted Prediction Results: " + convertedResults);
         return convertedResults;
     }
 
@@ -533,7 +533,7 @@ public class MissionService {
 
             long maxAllowedVisits = 0;
             if (averageCost != 0) {
-                maxAllowedVisits = (long) Math.max(0, (realWeeklyCategoryBudget * 0.8) / averageCost);
+                maxAllowedVisits = (long) Math.max(1, (realWeeklyCategoryBudget * 0.8) / averageCost);
             }
 
             float expectedVisitSpending = maxAllowedVisits * averageCost; // 방문 제한 후 예상 소비 금액

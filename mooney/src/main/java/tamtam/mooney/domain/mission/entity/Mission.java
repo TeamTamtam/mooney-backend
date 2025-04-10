@@ -73,7 +73,6 @@ public class Mission extends BaseTimeEntity {
         this.max = max;
     }
 
-
     public void updateResult(Float result) {
         this.result = result;
     }
