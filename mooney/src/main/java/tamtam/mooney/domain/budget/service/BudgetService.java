@@ -95,7 +95,7 @@ public class BudgetService {
         // 예정되어 있는 고정 지출 조회 (아직 발생하지 않은)
         long pendingExpenseAmount = Optional.ofNullable(scheduledTransactionService.getTotalPendingScheduledTransactionAmountByMonth(user, startOfMonth, endOfMonth)).orElse(0L);
         // 현재까지 발생한 지출 조회
-        long totalExpenseAmount = Optional.ofNullable(expenseService.getTotalExpenseAmountForMonth(user, startOfMonth, endOfMonth)).orElse(0L);
+        long totalExpenseAmount = Optional.ofNullable(expenseService.getTotalExpenseAmountForPeriod(user, startOfMonth, endOfMonth)).orElse(0L);
         // 남은 예산 계산
         long remainingBudgetAmount = Math.max(monthlyBudgetAmount - pendingExpenseAmount - totalExpenseAmount, 0); // 음수 방지
 
