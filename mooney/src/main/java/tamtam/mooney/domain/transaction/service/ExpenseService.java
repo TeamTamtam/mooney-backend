@@ -3,7 +3,6 @@ package tamtam.mooney.domain.transaction.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tamtam.mooney.domain.mission.entity.Mission;
 import tamtam.mooney.domain.mission.repository.MissionRepository;
 import tamtam.mooney.domain.mission.service.MissionService;
 import tamtam.mooney.domain.transaction.dto.ExpenseAddRequestDto;
@@ -15,7 +14,6 @@ import tamtam.mooney.domain.user.service.UserService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Service
 @Transactional
@@ -55,9 +53,9 @@ public class ExpenseService {
     }
 
     @Transactional(readOnly = true)
-    public Long getTotalExpenseAmountForMonth(User user, LocalDate startDate, LocalDate endDate) {
+    public Long getTotalExpenseAmountForPeriod(User user, LocalDate startDate, LocalDate endDate) {
         LocalDateTime startDateTime = startDate.atStartOfDay();
         LocalDateTime endDateTime = endDate.atTime(23, 59, 59);
-        return transactionRepository.getTotalExpenseAmountForMonth(user, startDateTime, endDateTime);
+        return transactionRepository.getTotalExpenseAmountForPeriod(user, startDateTime, endDateTime);
     }
 }
