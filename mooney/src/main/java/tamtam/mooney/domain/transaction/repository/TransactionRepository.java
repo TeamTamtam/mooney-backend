@@ -3,7 +3,6 @@ package tamtam.mooney.domain.transaction.repository;
 import io.lettuce.core.dynamic.annotation.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import reactor.core.publisher.Mono;
 import tamtam.mooney.domain.enums.ExpenseCategory;
 import tamtam.mooney.domain.transaction.entity.Transaction;
 import tamtam.mooney.domain.user.entity.User;
@@ -17,8 +16,8 @@ import java.util.Optional;
 
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
     // 특정 월의 총 지출 금액
-    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE TYPE(t) = Expense AND t.user = :user AND t.transactionTime BETWEEN :startOfMonth AND :endOfMonth")
-    Long getTotalExpenseAmountForMonth(User user, LocalDateTime startOfMonth, LocalDateTime endOfMonth);
+    @Query("SELECT COALESCE(SUM(t.amount), 0) FROM Transaction t WHERE TYPE(t) = Expense AND t.user = :user AND t.transactionTime BETWEEN :startDateTime AND :endDateTime")
+    Long getTotalExpenseAmountForPeriod(User user, LocalDateTime startDateTime, LocalDateTime endDateTime);
 
     // 특정 월의 총 수입, 지출 금액
     @Query("""
@@ -178,7 +177,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Map<String, Object>> findWeeklyAggregatedTransactions(@Param("userId") Long userId,
                                                                @Param("validCategories") List<Integer> validCategories,
                                                                @Param("startDate") LocalDateTime startDate);
-
 
 }
 
