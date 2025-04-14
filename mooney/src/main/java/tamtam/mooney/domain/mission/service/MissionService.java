@@ -71,16 +71,23 @@ public class MissionService {
     }
 
     // 미션 데이터(방문 횟수, 사용한 금액) 업데이트 - expense 발생할 때마다 미션에 해당하는지 보고 미션에 해당되면 추적해서 저장
-    public void updateMission(User user, String payee, long amount){
+    public void updateMission(User user, String payee, long amount) {
         LocalDate today = LocalDate.now();
         List<String> missionPlaces = missionRepository.findWeeklyMissionPlacesByUser(user.getUserId(), today);
+
+        // missionPlaces에 포함된 경우의 처리
         if (missionPlaces.contains(payee)) {
-            // missionPlaces에 포함된 경우의 처리
-            Mission mission = missionRepository.findMissionByPlace(payee);
-            //해당 미션의 numOfExpense와 amountOfExpense에 더하기
-            mission.addExpense(amount);
+            List<Mission> activeMissions = missionRepository.findActiveMissionsByUserAndPlace(user.getUserId(), payee, today);
+
+            if (!activeMissions.isEmpty()) {
+                //해당 미션의 numOfExpense와 amountOfExpense에 더하기
+                Mission latestMission = activeMissions.get(0); // 가장 최근 것 하나만 사용
+                latestMission.addExpense(amount);
+            }
         }
     }
+
+
 
     //미션 상태 업데이트
     public float updateMissionResult(LocalDate today){
