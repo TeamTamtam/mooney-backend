@@ -38,7 +38,6 @@ public class MissionService {
     private final CategoryBudgetRepository categoryBudgetRepository;
     private final WebClient webClient; // FastAPI 서버에서 데이터 가져오기 위한 클라이언트
     private static final String FASTAPI_URL = "https://mooney-ai.o-r.kr/predict"; // FastAPI URL
-    //private static final String FASTAPI_URL = "http://127.0.0.1:8000/predict";
     private final UserService userService;
 
 
@@ -405,6 +404,7 @@ public class MissionService {
      * "WeeklyBudget", realWeeklyCategoryBudget,
      * "PredictedSpending", predictedSpending
      **/
+    @Transactional(readOnly = false)
     public List<String> generateWeeklyMissions(User user, LocalDate missionStartDate) {
         //User user = userService.getCurrentUser();
         long userId = user.getUserId();

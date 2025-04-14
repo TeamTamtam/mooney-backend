@@ -36,7 +36,7 @@ public class MissionScheduler {
 
         List<User> users = userRepository.findAll(); // 모든 사용자 조회
 
-        //비동기+병렬
+        //비동기+병렬gtdgi
         List<CompletableFuture<Void>> futures = users.stream()
                 .map(user -> CompletableFuture.runAsync(() -> {
                     try {
