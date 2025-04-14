@@ -33,7 +33,16 @@ public interface MissionRepository extends JpaRepository<Mission, Long> {
             "AND :today BETWEEN m.startDate AND m.endDate")
     List<String> findWeeklyMissionPlacesByUser(@Param("userId") Long userId, @Param("today") LocalDate today);
 
-    Mission findMissionByPlace(@NotNull String place);
+    @Query("""
+    SELECT m FROM Mission m
+    WHERE m.categoryBudget.monthlyBudget.user.userId = :userId
+      AND m.place = :place
+      AND :today BETWEEN m.startDate AND m.endDate
+    ORDER BY m.createdAt DESC
+""")
+    List<Mission> findActiveMissionsByUserAndPlace(@Param("userId") Long userId,
+                                                   @Param("place") String place,
+                                                   @Param("today") LocalDate today);
 
     // ✅ 다음 주 미션이 존재하는지 확인하는 쿼리 추가
     @Query("SELECT COUNT(m) FROM Mission m " +
