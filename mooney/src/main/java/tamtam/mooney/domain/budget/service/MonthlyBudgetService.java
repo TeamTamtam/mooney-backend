@@ -52,7 +52,7 @@ public class MonthlyBudgetService {
 
         // 💡 핵심: 남은 예산 중 이번 주가 차지하는 비율만큼만 예산 할당
         int totalWeekDays = (int) (endOfWeek.toEpochDay() - startOfWeek.toEpochDay() + 1);
-        long thisWeekBudgetAmount = remainingMonthlyBudget * totalWeekDays / remainingDays;
+        long thisWeekBudgetAmount = remainingDays > 0 ? remainingMonthlyBudget * totalWeekDays / remainingDays : 0;
 
         // 사용액 추정 = (이번주 지출 / 오늘까지 경과 일수) * (월요일~오늘 해당하는 일수)
         long thisWeekSpentAmount = expenseService.getTotalExpenseAmountForPeriod(user, startOfWeek, endOfWeek);
@@ -61,8 +61,12 @@ public class MonthlyBudgetService {
         long scheduledExpenseAmount = 0L; // TODO: 추후 수정
 
         long thisWeekRemainingBudgetAmount = max(thisWeekBudgetAmount - thisWeekSpentAmount - scheduledExpenseAmount, 0L);
-        long dailyBudgetAmount = max((thisWeekRemainingBudgetAmount - scheduledExpenseAmount) / totalWeekDays, 0L);
-        int budgetUsagePercentage = max((int)(thisWeekSpentAmount * 100 / thisWeekBudgetAmount), 0);
+        long dailyBudgetAmount = max(totalWeekDays > 0 ? (thisWeekRemainingBudgetAmount - scheduledExpenseAmount) / totalWeekDays : 0, 0L);
+        int budgetUsagePercentage = Math.max(
+                thisWeekBudgetAmount > 0 ? (int)(thisWeekSpentAmount * 100 / thisWeekBudgetAmount) : 0,
+                0
+        );
+
 
         return UserHomeWeeklyBudgetDto.builder()
                 .remainingBudgetAmount(thisWeekRemainingBudgetAmount) // 이번 주 남은 예산 (오늘~일요일)
