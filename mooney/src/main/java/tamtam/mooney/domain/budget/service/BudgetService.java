@@ -105,7 +105,7 @@ public class BudgetService {
         List<CategoryBudgetProgressUnitDto> categoryBudgets = categoryBudgetService.getCategoryBudgetProgresses(user, monthlyBudget, startOfMonth);
 
         // 사용한 예산 비율 계산
-        int budgetUsagePercentage = (int) ((totalExpenseAmount + pendingExpenseAmount) * 100 / monthlyBudgetAmount);
+        int budgetUsagePercentage = monthlyBudgetAmount > 0 ? (int) ((totalExpenseAmount + pendingExpenseAmount) * 100 / monthlyBudgetAmount) : 0;
 
         return BudgetProgressResponseDto.builder()
                 .remainingBudgetAmount(remainingBudgetAmount)

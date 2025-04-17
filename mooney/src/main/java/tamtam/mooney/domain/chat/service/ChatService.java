@@ -13,6 +13,8 @@ import tamtam.mooney.domain.chat.dto.ChatBudgetInfoDto;
 import tamtam.mooney.domain.chat.dto.ChatMessage;
 import tamtam.mooney.domain.chat.dto.ChatRequestDto;
 import tamtam.mooney.domain.chat.dto.ChatResponseDto;
+import tamtam.mooney.domain.enums.ExpenseCategory;
+import tamtam.mooney.domain.transaction.service.ExpenseService;
 import tamtam.mooney.domain.transaction.service.TransactionService;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.service.UserService;
@@ -36,7 +38,7 @@ public class ChatService {
     private final OpenAIService openAIService;
     private final MonthlyBudgetService monthlyBudgetService;
     private final CategoryBudgetService categoryBudgetService;
-    private final TransactionService transactionService;
+    private final ExpenseService expenseService;
     private final GenericRedisRepository<ChatMessage> chatRedisRepository;
 
     // 채팅 저장
@@ -85,12 +87,12 @@ public class ChatService {
         List<CategoryBudget> budgets = categoryBudgetService.findByMonthlyBudget(monthlyBudget);
 
         // 특정 기간 동안의 모든 카테고리별 총 지출
-        Map<String, Long> totalExpensesByCategory = transactionService.mapTotalExpenseForAllCategories(user, startOfMonth);
+        Map<ExpenseCategory, Long> totalExpensesByCategory = expenseService.mapTotalExpenseForAllCategories(user, startOfMonth);
 
         // 각 카테고리의 실제 지출 계산
         return budgets.stream()
                 .map(cb -> {
-                    Long spent = totalExpensesByCategory.getOrDefault(cb.getExpenseCategory().name(), 0L);
+                    Long spent = totalExpensesByCategory.getOrDefault(cb.getExpenseCategory(), 0L);
                     long remaining = Math.max(cb.getAmount() - spent, 0);
 
                     return new ChatBudgetInfoDto(
