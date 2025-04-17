@@ -78,8 +78,8 @@ public class TransactionService {
         List<Object[]> results1 = transactionRepository.getTotalIncomeAndExpenseByMonth(user, startOfMonth.atStartOfDay(), endOfMonth.atTime(23, 59, 59));
         long totalIncomeAmount = 0L, totalExpenseAmount = 0L;
         for (Object[] result : results1) {
-            totalIncomeAmount = ((Number) result[0]).longValue();
-            totalExpenseAmount = ((Number) result[1]).longValue();
+            totalIncomeAmount += ((Number) result[0]).longValue();
+            totalExpenseAmount += ((Number) result[1]).longValue();
         }
 
         // 해당 월의 시작일부터 끝일까지의 모든 날짜를 Map에 초기화
