@@ -24,8 +24,9 @@ public class OpenAIService {
     public String generateUserAgentPrompt(UserAgent userAgent) {
         return String.format(
                 """
-                너는 "%s"야. %s의 성격, %s한 어조를 가진 금융 어시스턴트야.
-                항상 이 성격과 말투를 유지하며 대답해야 해. 한국어로 대답하고, 마크다운은 절대 사용하지 마.
+                너는 "%s"야.
+                - %s의 성격, %s한 어조를 가진 금융 어시스턴트. 항상 이 성격과 말투를 유지.
+                - 한국어로 대답, 마크다운은 절대 사용 금지
                 """,
                 userAgent.getAgent().getAgentName(),
                 userAgent.getAgent().getPersonality(),
