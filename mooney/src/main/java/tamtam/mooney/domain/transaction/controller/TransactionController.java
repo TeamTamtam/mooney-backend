@@ -20,6 +20,7 @@ import tamtam.mooney.domain.transaction.service.TransactionService;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.List;
 
 @Tag(name = "Transaction")
 @RestController
@@ -36,6 +37,17 @@ public class TransactionController {
     public ResponseEntity<String> createExpense(@RequestBody @Valid ExpenseAddRequestDto request) {
         String category = expenseService.createExpense(request);
         return ResponseEntity.ok(category);
+    }
+
+    @Operation(summary = "지출 내역 여러 건 추가")
+    @PostMapping("/expenses-multiple")
+    public ResponseEntity<Void> createMultipleExpenses(
+            @RequestBody @Valid List<ExpenseAddRequestDto> requests) {
+        // 각 DTO마다 서비스 호출
+        for (ExpenseAddRequestDto dto : requests) {
+            expenseService.createExpense(dto);
+        }
+        return ResponseEntity.ok().build();
     }
 
     @Operation(summary = "수입 내역 추가")
