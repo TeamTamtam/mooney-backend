@@ -26,4 +26,5 @@ public interface ExpenseRepository extends JpaRepository<Expense, Long> {
     // 최근 지출 내역 조회 (최대 limit개)
     @Query("SELECT e FROM Expense e WHERE e.user = :user ORDER BY e.transactionTime DESC LIMIT :limit")
     List<Expense> findRecentExpenses(User user, int limit);
+
 }

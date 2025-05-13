@@ -9,10 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tamtam.mooney.domain.transaction.dto.MonthlyTransactionDayUnitDto;
-import tamtam.mooney.domain.transaction.dto.ExpenseAddRequestDto;
-import tamtam.mooney.domain.transaction.dto.IncomeAddRequestDto;
-import tamtam.mooney.domain.transaction.dto.MonthlyTransactionResponseDto;
+import tamtam.mooney.domain.transaction.dto.*;
 import tamtam.mooney.domain.transaction.service.ExpenseDataLoader;
 import tamtam.mooney.domain.transaction.service.ExpenseService;
 import tamtam.mooney.domain.transaction.service.IncomeService;
@@ -63,10 +60,18 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.getTransactionsByDate(date));
     }
 
+
     @Operation(summary = "특정 월의 수입 및 지출 내역 조회")
     @GetMapping("/monthly")
     public ResponseEntity<MonthlyTransactionResponseDto> getTransactionsByMonth(@RequestParam @NotNull @Min(2024) int year,
                                                                                 @RequestParam @NotNull @Min(1) @Max(12) int month) {
         return ResponseEntity.ok(transactionService.getTransactionsByMonth(year, month));
+    }
+
+    @Operation(summary = "특정 월의 지출 내역 세부 조회 카테고리까지 ")
+    @GetMapping("/monthlyExpense")
+    public ResponseEntity<List<MonthlyExpenseCategoryViewDto>> getDetailExpensesByMonth(@RequestParam @NotNull @Min(2024) int year,
+                                                                                        @RequestParam @NotNull @Min(1) @Max(12) int month) {
+        return ResponseEntity.ok(transactionService.getMonthlyExpensesByCategory(year, month));
     }
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tamtam.mooney.domain.enums.ExpenseCategory;
 import tamtam.mooney.domain.transaction.dto.*;
 import tamtam.mooney.domain.transaction.entity.Expense;
 import tamtam.mooney.domain.transaction.entity.Income;
@@ -14,7 +15,9 @@ import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.service.UserService;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -106,6 +109,34 @@ public class TransactionService {
                 .dailySummaries(dailySummaries)
                 .build();
     }
+
+    @Transactional(readOnly = true)
+    public List<MonthlyExpenseCategoryViewDto> getMonthlyExpensesByCategory(int year, int month) {
+        User user = userService.getCurrentUser();
+
+        // 해당 월의 시작과 끝 날짜 계산
+        LocalDate startOfMonth = LocalDate.of(year, month, 1);
+        LocalDate endOfMonth = startOfMonth.withDayOfMonth(startOfMonth.lengthOfMonth());
+
+        // 해당 기간 동안의 Expense 조회
+        List<Object[]> expenses = expenseRepository.getTotalExpenseForAllCategories(
+                user, startOfMonth.atStartOfDay(), endOfMonth.plusDays(1).atStartOfDay());
+
+        // 매핑
+        return expenses.stream()
+                .map(e -> new MonthlyExpenseCategoryViewDto(
+                        (Long) e[0], // transactionId
+                        ExpenseCategory.values()[((Number) e[1]).intValue()], // ordinal → enum
+                        (Long) e[2], // amount
+                        (LocalDateTime) e[3], // transactionTime
+                        (String) e[4], // transactionSource
+                        (String) e[5], // payee
+                        (String) e[6]  // note
+                ))
+                .collect(Collectors.toList());
+
+    }
+
 
     // 특정 날짜의 총 지출 금액 조회
     @Transactional(readOnly = true)
