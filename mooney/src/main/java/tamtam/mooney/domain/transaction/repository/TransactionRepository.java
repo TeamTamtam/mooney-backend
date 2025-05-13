@@ -131,21 +131,21 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 
 
 
-    @Query("""
-    SELECT e.payee, 
-           COUNT(t) / COUNT(DISTINCTFUNCTION('WEEK', t.transactionTime)) AS avgWeeklyVisits,
-           AVG(t.amount) AS avgSpendingPerVisit
-    FROM Transaction t
-    JOIN Expense e ON t.transactionId = e.transactionId
-    WHERE t.user.userId = :userId
-    AND e.payee = :payee
-    AND t.transactionTime BETWEEN :startDate AND :endDate
-    GROUP BY e.payee
-""")
-    Object[] findWeeklyVisitAndSpendingByPayee(@Param("userId") Long userId,
-                                               @Param("payee") String payee,
-                                               @Param("startDate") LocalDate startDate,
-                                               @Param("endDate") LocalDate endDate);
+//    @Query("""
+//    SELECT e.payee,
+//           COUNT(t) / COUNT(DISTINCTFUNCTION('WEEK', t.transactionTime)) AS avgWeeklyVisits,
+//           AVG(t.amount) AS avgSpendingPerVisit
+//    FROM Transaction t
+//    JOIN Expense e ON t.transactionId = e.transactionId
+//    WHERE t.user.userId = :userId
+//    AND e.payee = :payee
+//    AND t.transactionTime BETWEEN :startDate AND :endDate
+//    GROUP BY e.payee
+//""")
+//    Object[] findWeeklyVisitAndSpendingByPayee(@Param("userId") Long userId,
+//                                               @Param("payee") String payee,
+//                                               @Param("startDate") LocalDate startDate,
+//                                               @Param("endDate") LocalDate endDate);
 
 
 

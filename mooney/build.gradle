@@ -48,8 +48,8 @@ dependencies {
     implementation 'org.json:json:20231013'
     //jjwt
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-impl:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     //redis
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
     //cache
@@ -61,7 +61,7 @@ dependencies {
     //Spring AI
     implementation 'org.springframework.ai:spring-ai-openai:1.0.0-M6'
     //netty-resolver-dns-native-macos
-    runtimeOnly 'io.netty:netty-resolver-dns-native-macos:4.1.119.Final:osx-aarch_64'
+    implementation 'io.netty:netty-resolver-dns-native-macos:4.1.119.Final:osx-aarch_64'
     //LocalDateTime 직렬화 위해
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 }

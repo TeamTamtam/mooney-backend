@@ -37,7 +37,8 @@ public class MissionService {
     private final TransactionRepository transactionRepository;
     private final CategoryBudgetRepository categoryBudgetRepository;
     private final WebClient webClient; // FastAPI 서버에서 데이터 가져오기 위한 클라이언트
-    private static final String FASTAPI_URL = "https://mooney-ai.o-r.kr/predict"; // FastAPI URL
+    //private static final String FASTAPI_URL = "https://mooney-ai.o-r.kr/predict"; // FastAPI URL
+    private static final String FASTAPI_URL = "http://localhost:8000/predict"; // FastAPI URL
     private final UserService userService;
 
 
@@ -215,12 +216,12 @@ public class MissionService {
 
     //# FastAPI 서버에서 카테고리 및 예상 지출 금액을 가져와 현재 주별 예산과 비교하는 동기 메서드(1~3 포함)
     // => 지출 > 예상인 카테고리에 한해 카테고리, realWeeklyCategoryBudget, predictedSpending을 return
-     private List<Map<String, Object>> getSelectedCategories(User user) {
+     private List<Map<String, Object>> getSelectedCategories(User user, LocalDate missionStartDate) {
          // 1️⃣ FastAPI에서 예상 지출 데이터 가져오기 (동기 방식)
          List<Map<String, Object>> categoryDataList = fetchPredictedSpending(user);
 
          // 2️⃣ 주별 예산과 비교하여 데이터 반환
-         return compareWithWeeklyBudget(user, categoryDataList);
+         return compareWithWeeklyBudget(user, categoryDataList, missionStartDate);
      }
 
 
@@ -325,8 +326,8 @@ public class MissionService {
      *     "yhat_adjusted", predictedSpending // Long
      * )
      */
-    // 3️⃣ 특정 카테고리에 대해 현재 주별 예산과 비교 (모든 카테고리를 개별적으로 처리)
-    private List<Map<String, Object>> compareWithWeeklyBudget(User user, List<Map<String, Object>> categoryDataList) {
+    //  2️⃣ 특정 카테고리에 대해 현재 주별 예산과 비교 (모든 카테고리를 개별적으로 처리)
+    private List<Map<String, Object>> compareWithWeeklyBudget(User user, List<Map<String, Object>> categoryDataList, LocalDate missionStartDate) {
         List<Map<String, Object>> result = new ArrayList<>();
         List<Map<String, Object>> notSelectedResult = new ArrayList<>(); //카테고리가 3개 미만으로 뽑히는 상황 위해
         System.out.println("compareWithWeeklyBudget\n\n");
@@ -342,7 +343,7 @@ public class MissionService {
                 predictedSpending = 100000L;
             }
 
-            long realWeeklyCategoryBudget = calculateWeeklyBudget(user, category);
+            long realWeeklyCategoryBudget = calculateWeeklyBudget(user, category, missionStartDate);
 
             Map<String, Object> categoryBudgetInfo = new HashMap<>();
             categoryBudgetInfo.put("Category", category);
@@ -381,9 +382,9 @@ public class MissionService {
     }
 
     //3.
-    private Long calculateWeeklyBudget(User user, ExpenseCategory category) {
-        LocalDate today = LocalDate.now();
-        LocalDateTime monthDate = today.withDayOfMonth(1).atStartOfDay(); // 해당 월의 첫째 날
+    private Long calculateWeeklyBudget(User user, ExpenseCategory category, LocalDate missionStartDate) {
+        LocalDate today = missionStartDate.minusDays(1); // 미션 발생 전 날
+        LocalDate monthDate = missionStartDate.withDayOfMonth(1);// 해당 월의 첫째 날
 
         // 1️⃣ 현재 월의 전체 주 수 계산
         WeekFields weekFields = WeekFields.of(Locale.getDefault());
@@ -397,10 +398,10 @@ public class MissionService {
 
         // 4️⃣ 예산과 지출을 가져와서 연산 수행
         //예산
-        Long categoryBudgetAmount = getUserCategoryBudgetAmount(user, category, monthDate.toLocalDate());
+        Long categoryBudgetAmount = getUserCategoryBudget(user.getUserId(), category, monthDate).getAmount();
 
         //지출
-        Long totalExpense = transactionRepository.getTotalCategoryExpenseAmountForMonth(user, category, monthDate, LocalDateTime.now()).orElse(0L);
+        Long totalExpense = transactionRepository.getTotalCategoryExpenseAmountForMonth(user, category, monthDate.atStartOfDay(), missionStartDate.atStartOfDay()).orElse(0L);
         return (categoryBudgetAmount - totalExpense) / remainingWeeks;
     }
 
@@ -413,19 +414,17 @@ public class MissionService {
      * "PredictedSpending", predictedSpending
      **/
     public List<String> generateWeeklyMissions(User user, LocalDate missionStartDate) {
-        //User user = userService.getCurrentUser();
         long userId = user.getUserId();
+        LocalDate today = missionStartDate.minusDays(1); // 미션 발생 전 날
 
         // 현재 날짜 관련 변수 미리 선언
-        LocalDate now = LocalDate.now();
-        LocalDate currentMonthStart = now.withDayOfMonth(1);
-        LocalDateTime startDate = now.minusMonths(2).atStartOfDay(); // 두 달 전부터 조회
-        LocalDateTime endDate = LocalDateTime.now();
+        LocalDate currentMonthStart = missionStartDate.withDayOfMonth(1);
+        LocalDate startDate = today.minusMonths(2); // 두 달 전부터 조회
 
         // 디버깅 로그 (실제 서비스에서는 logger 사용 권장)
         System.out.println("Current Month 시작 : " + currentMonthStart.format(DateTimeFormatter.ISO_LOCAL_DATE));
 
-        List<Map<String, Object>> categoryDataList = getSelectedCategories(user);
+        List<Map<String, Object>> categoryDataList = getSelectedCategories(user, missionStartDate);
 
         List<String> missionTitles = new ArrayList<>();
 
@@ -445,7 +444,7 @@ public class MissionService {
 
 
             // realWeeklyCategoryBudget 계산
-            Long realWeeklyCategoryBudget = calculateWeeklyBudget(user, category);
+            Long realWeeklyCategoryBudget = calculateWeeklyBudget(user, category,missionStartDate);
             System.out.println("realWeeklyCategoryBudget: " + realWeeklyCategoryBudget);
 
             System.out.println(userId + " " + category + " " + currentMonthStart);
@@ -454,12 +453,12 @@ public class MissionService {
             CategoryBudget categoryBudget = getUserCategoryBudget(userId, category, currentMonthStart);
 
             //다음주 미션이 이미 있으면 생성 안되게
-            checkUserHasNextWeekMission(userId, now);
+            checkUserHasNextWeekMission(userId, missionStartDate);
 
             // 미션 생성
             Mission mission = generateCategoryMission( //여기서 missionReposiotry에 save
-                    getTop3VisitDataByCategory(user, category, startDate, endDate),
-                    getTop3SpendingDataByCategory(user, category, startDate, endDate),
+                    getTop3VisitDataByCategory(user, category, startDate, missionStartDate),
+                    getTop3SpendingDataByCategory(user, category, startDate, missionStartDate),
                     realWeeklyCategoryBudget,
                     predictedSpending,
                     categoryBudget,
@@ -475,10 +474,10 @@ public class MissionService {
         return missionTitles;
     }
 
-    private void checkUserHasNextWeekMission(long userId, LocalDate now) {
-        LocalDate nextWeekStart = now.plusWeeks(1).with(java.time.DayOfWeek.MONDAY); // 다음 주 월요일
-        LocalDate nextWeekEnd = nextWeekStart.plusDays(6);
-        long nextWeekMissionCount = missionRepository.countNextWeekMissionsByUser(userId, nextWeekStart, nextWeekEnd);
+    private void checkUserHasNextWeekMission(long userId, LocalDate missionStartDate) {
+        // 다음 주 월요일 missionStartDate
+        LocalDate nextWeekEnd = missionStartDate.plusDays(6);
+        long nextWeekMissionCount = missionRepository.countNextWeekMissionsByUser(userId, missionStartDate, nextWeekEnd);
 
         if (nextWeekMissionCount > 0) {
             throw new IllegalStateException("다음 주 미션이 이미 존재합니다. userId=" + userId);
@@ -599,11 +598,8 @@ public class MissionService {
 
 
     /**
-     * 특정 카테고리의 예산을 가져오기
+     * 이번 달 특정 카테고리의 전체 예산을 가져오기
      */
-    private Long getUserCategoryBudgetAmount(User user, ExpenseCategory category, LocalDate monthDate) {
-        return categoryBudgetRepository.findCategoryBudgetByUserIdAndExpenseCategoryAndMonth(user.getUserId(), category, monthDate).getAmount(); // Returns 0 if no value is found
-    }
     private CategoryBudget getUserCategoryBudget(Long userId, ExpenseCategory category, LocalDate monthDate) {
         return categoryBudgetRepository.findCategoryBudgetByUserIdAndExpenseCategoryAndMonth(userId, category, monthDate); // Returns 0 if no value is found
     }
@@ -611,8 +607,8 @@ public class MissionService {
     /**
      * 특정 카테고리의 방문 횟수 데이터를 동기적으로 가져오기
      */
-    private List<Object[]> getTop3VisitDataByCategory(User user, ExpenseCategory category, LocalDateTime startDate, LocalDateTime endDate) {
-        List<Object[]> top3Visits  = transactionRepository.findVisitDataByCategory(user.getUserId(), category, startDate, endDate, (Pageable) PageRequest.of(0, 3));
+    private List<Object[]> getTop3VisitDataByCategory(User user, ExpenseCategory category, LocalDate startDate, LocalDate endDate) {
+        List<Object[]> top3Visits  = transactionRepository.findVisitDataByCategory(user.getUserId(), category, startDate.atStartOfDay(), endDate.atStartOfDay(), (Pageable) PageRequest.of(0, 3));
 
         return top3Visits; // null 체크 후 빈 맵 반환
     }
@@ -620,8 +616,8 @@ public class MissionService {
     /**
      * 특정 카테고리의 소비 데이터를 동기적으로 가져오기
      */
-    private List<Object[]> getTop3SpendingDataByCategory(User user, ExpenseCategory category, LocalDateTime startDate, LocalDateTime endDate) {
-        List<Object[]> top3SpendingData = transactionRepository.findSpendingDataByCategory(user.getUserId(), category, startDate, endDate, (org.springframework.data.domain.Pageable) PageRequest.of(0, 3));
+    private List<Object[]> getTop3SpendingDataByCategory(User user, ExpenseCategory category, LocalDate startDate, LocalDate endDate) {
+        List<Object[]> top3SpendingData = transactionRepository.findSpendingDataByCategory(user.getUserId(), category, startDate.atStartOfDay(), endDate.atStartOfDay(), (org.springframework.data.domain.Pageable) PageRequest.of(0, 3));
 
         return top3SpendingData; // null 체크 후 빈 맵 반환
     }
