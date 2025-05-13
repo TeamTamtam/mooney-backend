@@ -576,13 +576,13 @@ public class MissionService {
             String spendingTitle = spendingPlace + "에서 " + (int) maxAllowedSpending + "원 이하로 소비하기!";
 
             spendingMission = new Mission(MissionType.EXPENSE, startDate, endDate, spendingTitle, spendingPlace, spendingAdvice, categoryBudget, maxAllowedSpending);
-            System.out.println("Mission advice before saving: " + spendingMission.getAdvice());
+            System.out.println("💥NEW MISSION: "+spendingTitle + spendingAdvice);
         }
 
         // 두 미션 중 더 적합한 것을 선택하거나, 하나만 존재하는 경우 해당 미션 반환
         Mission missionToSave = null;
         if (visitMission != null && spendingMission != null) {
-            missionToSave = (spendingGap < visitGap) ? spendingMission : visitMission;
+            missionToSave = (spendingGap+50000 < visitGap) ? spendingMission : visitMission;
         } else if (spendingMission != null) {
             missionToSave = spendingMission;
         } else if (visitMission != null) {

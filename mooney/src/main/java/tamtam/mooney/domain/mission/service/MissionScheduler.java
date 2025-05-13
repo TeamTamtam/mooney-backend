@@ -27,7 +27,7 @@ public class MissionScheduler {
     }
 
     //@Scheduled(cron="0 * * * * *")
-    @Scheduled(cron = "00 50 23 * * 0") // 매주 일요일 23:50:00에 실행
+    //@Scheduled(cron = "00 50 23 * * 0") // 매주 일요일 23:50:00에 실행
     public void scheduleWeeklyMissionGeneration() {
         long startTime = System.currentTimeMillis(); // 시작 시간 기록
         LocalDate startDate = getNextMonday();

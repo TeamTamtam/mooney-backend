@@ -5,6 +5,7 @@ import lombok.Getter;
 
 @Getter
 public enum ExpenseCategory {
+    //0-BASED인 거 잊지 않기!
     FOOD(1, "식비", "🍽️"),
     CAFE_SNACKS(2, "카페/간식", "🍩"),
     ALCOHOL_ENTERTAINMENT(3, "술/유흥", "🍻"),

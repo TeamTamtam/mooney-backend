@@ -68,10 +68,4 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.getTransactionsByMonth(year, month));
     }
 
-    @Operation(summary = "특정 월의 지출 내역 세부 조회 카테고리까지 ")
-    @GetMapping("/monthlyExpense")
-    public ResponseEntity<List<MonthlyExpenseCategoryViewDto>> getDetailExpensesByMonth(@RequestParam @NotNull @Min(2024) int year,
-                                                                                        @RequestParam @NotNull @Min(1) @Max(12) int month) {
-        return ResponseEntity.ok(transactionService.getMonthlyExpensesByCategory(year, month));
-    }
 }
