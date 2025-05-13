@@ -27,8 +27,8 @@ public class MissionScheduler {
         this.userRepository = userRepository;
     }
 
+    //@Scheduled(cron="0 * * * * *")
     @Scheduled(cron = "00 50 23 * * 0") // 매주 일요일 23:50:00에 실행
-    //@Scheduled(cron = "10 * * * * *")
     public void scheduleWeeklyMissionGeneration() {
         long startTime = System.currentTimeMillis(); // 시작 시간 기록
         LocalDate startDate = getNextMonday();
@@ -36,7 +36,7 @@ public class MissionScheduler {
 
         List<User> users = userRepository.findAll(); // 모든 사용자 조회
 
-        //비동기+병렬gtdgi
+        //비동기+병렬
         List<CompletableFuture<Void>> futures = users.stream()
                 .map(user -> CompletableFuture.runAsync(() -> {
                     try {

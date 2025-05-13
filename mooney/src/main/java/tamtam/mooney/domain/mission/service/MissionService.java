@@ -37,14 +37,17 @@ public class MissionService {
     private final TransactionRepository transactionRepository;
     private final CategoryBudgetRepository categoryBudgetRepository;
     private final WebClient webClient; // FastAPI 서버에서 데이터 가져오기 위한 클라이언트
-    private static final String FASTAPI_URL = "https://mooney-ai.o-r.kr/predict"; // FastAPI URL
+    //private static final String FASTAPI_URL = "https://mooney-ai.o-r.kr/predict"; // FastAPI URL
+    private static final String FASTAPI_URL = "http://127.0.0.1:8000/predict";
+
+
     private final UserService userService;
 
 
     // 저장해놓은 미션 가져오기(홈)
     public List<UserHomeWeeklyMissionDto> getWeeklyMissions(LocalDate today) {
         User user = userService.getCurrentUser();
-        List<Mission> missions = missionRepository.findWeeklyMissionsByUser(user.getUserId(), today);
+        List<Mission> missions = missionRepository.findWeeklyMissionsByUserWithFetch(user.getUserId(), today);
         updateMissionResult(today);
 
         return missions.stream()
@@ -57,7 +60,7 @@ public class MissionService {
     // 저장해놓은 미션 가져오기(미션탭)
     public List<MissionDto> getWeeklyMissionsDetail(LocalDate today) {
         User user = userService.getCurrentUser();
-        List<Mission> missions = missionRepository.findWeeklyMissionsByUser(user.getUserId(), today);
+        List<Mission> missions = missionRepository.findWeeklyMissionsByUserWithFetch(user.getUserId(), today);
         updateMissionResult(today);
 
         return missions.stream()
@@ -85,7 +88,7 @@ public class MissionService {
     //미션 상태 업데이트
     public float updateMissionResult(LocalDate today){
         User user = userService.getCurrentUser();
-        List<Mission> missions = missionRepository.findWeeklyMissionsByUser(user.getUserId(), today);
+        List<Mission> missions = missionRepository.findWeeklyMissionsByUserWithFetch(user.getUserId(), today);
         int currentDayOfWeek = today.getDayOfWeek().getValue();
         float sum = 0;
         System.out.println("오늘 요일: " + currentDayOfWeek);

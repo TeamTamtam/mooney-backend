@@ -10,22 +10,22 @@ import java.util.List;
 import java.util.Optional;
 
 public interface MissionRepository extends JpaRepository<Mission, Long> {
-    Float findMissionResultByMissionId(Long missionId);
 
-//    List<Mission> getMissionByCategoryBudget_Id(Long categoryBudgetId);
-
-    // 1️⃣ 사용자의 이번 주 미션 가져오기
+    // 1사용자의 이번 주 미션 가져오기
+//    @Query("SELECT m FROM Mission m " +
+//            "WHERE m.categoryBudget.monthlyBudget.user.userId = :userId " +
+//            "AND :today BETWEEN m.startDate AND m.endDate")
+//    List<Mission> findWeeklyMissionsByUser(@Param("userId") Long userId, @Param("today") LocalDate today);
+    // 1사용자의 이번 주 미션 가져오기 - fetchJoin으로
     @Query("SELECT m FROM Mission m " +
-            "WHERE m.categoryBudget.monthlyBudget.user.userId = :userId " +
-            "AND :today BETWEEN m.startDate AND m.endDate")
-    List<Mission> findWeeklyMissionsByUser(@Param("userId") Long userId, @Param("today") LocalDate today);
+            " JOIN FETCH m.categoryBudget cb" +
+            " JOIN FETCH cb.monthlyBudget mb" +
+            " WHERE mb.user.userId = :userId" +
+            "   AND :today BETWEEN m.startDate AND m.endDate")
+    List<Mission> findWeeklyMissionsByUserWithFetch(@Param("userId") Long userId,
+                                                    @Param("today") LocalDate today);
 
-    // 2️⃣ 해당 미션에 맞는 사용자 ID 가져오기
-    @Query("SELECT mb.user.userId FROM Mission m " +
-            "JOIN m.categoryBudget cb " +
-            "JOIN cb.monthlyBudget mb " +
-            "WHERE m.missionId = :missionId")
-    Optional<Long> findUserIdByMissionId(@Param("missionId") Long missionId);
+
 
     //현재 진행중인 미션의 place를 가져오기
     @Query("SELECT m.place FROM Mission m " +

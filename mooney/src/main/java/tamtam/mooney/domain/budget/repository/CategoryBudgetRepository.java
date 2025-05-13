@@ -25,5 +25,4 @@ public interface CategoryBudgetRepository extends JpaRepository<CategoryBudget, 
     CategoryBudget findCategoryBudgetByUserIdAndExpenseCategoryAndMonth(@Param("userId") Long userId,
                                                                  @Param("category") ExpenseCategory category,
                                                                  @Param("monthDate") LocalDate monthDate);
-    CategoryBudget findCategoryBudgetByMonthlyBudgetAndExpenseCategory(MonthlyBudget monthlyBudget, ExpenseCategory category);
 }
