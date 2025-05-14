@@ -9,10 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import tamtam.mooney.domain.transaction.dto.MonthlyTransactionDayUnitDto;
-import tamtam.mooney.domain.transaction.dto.ExpenseAddRequestDto;
-import tamtam.mooney.domain.transaction.dto.IncomeAddRequestDto;
-import tamtam.mooney.domain.transaction.dto.MonthlyTransactionResponseDto;
+import tamtam.mooney.domain.transaction.dto.*;
 import tamtam.mooney.domain.transaction.service.ExpenseDataLoader;
 import tamtam.mooney.domain.transaction.service.ExpenseService;
 import tamtam.mooney.domain.transaction.service.IncomeService;
@@ -30,12 +27,18 @@ public class TransactionController {
     private final TransactionService transactionService;
     private final ExpenseService expenseService;
     private final IncomeService incomeService;
-    private final ExpenseDataLoader expenseDataLoader;
 
     @Operation(summary = "지출 내역 추가")
     @PostMapping("/expenses")
     public ResponseEntity<String> createExpense(@RequestBody @Valid ExpenseAddRequestDto request) {
         String category = expenseService.createExpense(request);
+        return ResponseEntity.ok(category);
+    }
+
+    @Operation(summary = "지출 내역 추가 w.카테고리")
+    @PostMapping("/expenses/category")
+    public ResponseEntity<String> createExpenseWithCategory(@RequestBody @Valid ExpenseWithCategoryAddRequestDto request) {
+        String category = expenseService.createExpenseWithCategory(request);
         return ResponseEntity.ok(category);
     }
 
