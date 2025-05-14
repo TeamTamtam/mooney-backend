@@ -20,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Service
@@ -33,12 +34,76 @@ public class ExpenseService {
     // private final LlmCategoryClassifier llmCategoryClassifier;
     private final MissionService missionService;
 
-    // 지출 추가 (카테고리 예측)
+    // 정규식 패턴 → 카테고리 매핑 리스트
+    private final List<PatternCategory> patternCategoryList = List.of(
+            // 카페 / 간식
+            new PatternCategory(Pattern.compile("(?i).*(쏘머럽|투썸플레이스|스타벅스|컴포즈|커피|페이브).*"),
+                    ExpenseCategory.CAFE_SNACKS),
+            // 식비
+            new PatternCategory(Pattern.compile("(?i).*(떡볶이|김밥|돈까스|식당|파스타|국수|써브웨이|밥).*"),
+                    ExpenseCategory.FOOD),
+            // 교통
+            new PatternCategory(Pattern.compile("(?i).*(티머니|택시|버스|지하철).*"),
+                    ExpenseCategory.TRANSPORTATION),
+            // 온라인쇼핑
+            new PatternCategory(Pattern.compile("(?i).*(쿠팡|G마켓|11번가|티몬|위메프|배송|주문|네이버쇼핑).*"),
+                    ExpenseCategory.ONLINE_SHOPPING),
+
+            // 생활 (편의점·마트)
+            new PatternCategory(Pattern.compile("(?i).*(이마트|홈플러스|롯데마트|GS25|CU|세븐일레븐).*"),
+                    ExpenseCategory.LIVING),
+
+            // 뷰티 / 미용
+            new PatternCategory(Pattern.compile("(?i).*(올리브영|뷰티|화장품|헤어|네일).*"),
+                    ExpenseCategory.BEAUTY_CARE),
+
+            // 패션 / 쇼핑
+            new PatternCategory(Pattern.compile("(?i).*(현대백화점|롯데백화점|무신사|패션|의류).*"),
+                    ExpenseCategory.FASHION_SHOPPING),
+
+            // 교육 / 학습
+            new PatternCategory(Pattern.compile("(?i).*(교보문고|아카데미|학원|교육).*"),
+                    ExpenseCategory.EDUCATION),
+
+            // 문화 / 여가
+            new PatternCategory(Pattern.compile("(?i).*(CGV|메가박스|영화|전시|공연|문화).*"),
+                    ExpenseCategory.CULTURE_LEISURE),
+
+            // 여행 / 숙박
+            new PatternCategory(Pattern.compile("(?i).*(아고다|호텔|모텔|게스트하우스|여행|숙박).*"),
+                    ExpenseCategory.TRAVEL_ACCOMMODATION),
+
+            // 의료 / 건강
+            new PatternCategory(Pattern.compile("(?i).*(병원|약국|의원|치과|외과|내과).*"),
+                    ExpenseCategory.HEALTHCARE),
+
+            // 금융
+            new PatternCategory(Pattern.compile("(?i).*(카카오페이|토스|네이버페이|페이코|이체|입금|출금).*"),
+                    ExpenseCategory.FINANCE)
+    );
+
+
+    // 지출 추가 (정규식 기반 카테고리 매핑)
     public String createExpense(ExpenseAddRequestDto request) {
         User user = userService.getCurrentUser();
-        String predicted = "FOOD"; //llmCategoryClassifier.classifyCategory(request.payee(), true);
-        ExpenseCategory category = ExpenseCategory.valueOf(predicted);
+        String payee = request.payee();
+
+        ExpenseCategory category = patternCategoryList.stream()
+                .filter(pc -> pc.pattern.matcher(payee).matches())
+                .map(pc -> pc.category)
+                .findFirst()
+                .orElse(ExpenseCategory.FOOD);
+
         return saveAndReturnCategory(request, user, category);
+    }
+
+    private static class PatternCategory {
+        final Pattern pattern;
+        final ExpenseCategory category;
+        PatternCategory(Pattern pattern, ExpenseCategory category) {
+            this.pattern = pattern;
+            this.category = category;
+        }
     }
 
     // 지출 추가 (카테고리 직접 지정)
