@@ -4,9 +4,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tamtam.mooney.domain.mission.repository.MissionRepository;
 import tamtam.mooney.domain.mission.service.MissionService;
+import tamtam.mooney.domain.transaction.dto.BaseExpenseRequest;
 import tamtam.mooney.domain.transaction.dto.ExpenseAddRequestDto;
+import tamtam.mooney.domain.transaction.dto.ExpenseWithCategoryAddRequestDto;
 import tamtam.mooney.domain.transaction.entity.Expense;
 import tamtam.mooney.domain.enums.ExpenseCategory;
 import tamtam.mooney.domain.transaction.repository.ExpenseRepository;
@@ -30,20 +31,31 @@ public class ExpenseService {
     private final ExpenseRepository expenseRepository;
     private final UserService userService;
     // private final LlmCategoryClassifier llmCategoryClassifier;
-    private final MissionRepository missionRepository;
     private final MissionService missionService;
 
-    // 지출 추가
+    // 지출 추가 (카테고리 예측)
     public String createExpense(ExpenseAddRequestDto request) {
         User user = userService.getCurrentUser();
+        String predicted = "FOOD"; //llmCategoryClassifier.classifyCategory(request.payee(), true);
+        ExpenseCategory category = ExpenseCategory.valueOf(predicted);
+        return saveAndReturnCategory(request, user, category);
+    }
 
-        // String predictedCategory = llmCategoryClassifier.classifyCategory(request.payee(), true);
-        String predictedCategory = ExpenseCategory.FOOD.name();
-        ExpenseCategory expenseCategory = ExpenseCategory.valueOf(predictedCategory);
+    // 지출 추가 (카테고리 직접 지정)
+    public String createExpenseWithCategory(ExpenseWithCategoryAddRequestDto request) {
+        User user = userService.getCurrentUser();
+        return saveAndReturnCategory(request, user, request.expenseCategory());
+    }
 
+    // ——— private 헬퍼 메서드 ———
+    private <T extends BaseExpenseRequest> String saveAndReturnCategory(
+            T request,
+            User user,
+            ExpenseCategory category
+    ) {
         Expense expense = Expense.builder()
                 .payee(request.payee())
-                .expenseCategory(expenseCategory)
+                .expenseCategory(category)
                 .amount(request.amount())
                 .transactionTime(request.transactionTime())
                 .transactionSource(request.transactionSource())
@@ -52,11 +64,8 @@ public class ExpenseService {
                 .build();
 
         transactionRepository.save(expense);
-
-        //들어온 지출의 payee가 현재 진행중인 미션 place에 해당된다면 missionRepo에 save
-        missionService.updateMission(user, request.payee(),request.amount());
-
-        return expense.getExpenseCategory().name();
+        missionService.updateMission(user, request.payee(), request.amount());
+        return category.name();
     }
 
     @Transactional(readOnly = true)
