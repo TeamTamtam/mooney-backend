@@ -21,10 +21,10 @@ public class AgentInitializer {
         if (agentRepository.count() > 0) return; // 이미 데이터가 있으면 초기화 X
 
         Set.of(
-                "무니, 정석적이고 친절한 가계부 전문가, /png",
-                "써니, 활발하고 쾌활한 응원러, /png",
-                "티타, 깐깐하고 엄격한 절약 전문가, /png",
-                "에피, 감성적이고 위로를 잘하는 힐링 캐릭터, /png"
+                "무니, 정석적이고 친절한 가계부 전문가",
+                "써니, 활발하고 쾌활한 치어리더",
+                "티타, 깐깐하고 엄격한 절약 전문가",
+                "에피, 감성적이고 위로를 잘하는 힐링 캐릭터"
         ).forEach(agent -> {
             String[] parts = agent.split(",");
             agentRepository.save(new Agent(parts[0].trim(), parts[1].trim(), parts[2].trim()));

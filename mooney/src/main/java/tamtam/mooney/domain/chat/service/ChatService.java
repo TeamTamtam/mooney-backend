@@ -15,7 +15,6 @@ import tamtam.mooney.domain.chat.dto.ChatRequestDto;
 import tamtam.mooney.domain.chat.dto.ChatResponseDto;
 import tamtam.mooney.domain.enums.ExpenseCategory;
 import tamtam.mooney.domain.transaction.service.ExpenseService;
-import tamtam.mooney.domain.transaction.service.TransactionService;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.service.UserService;
 import tamtam.mooney.global.openai.OpenAIOptionEnum;
@@ -53,12 +52,10 @@ public class ChatService {
         chatRedisRepository.save("chat:" + userId, chatMessage);
     }
 
-
     @Transactional(readOnly = true)
     public List<ChatMessage> getChatHistory(String userId) {
         return chatRedisRepository.findAll("chat:" + userId);
     }
-
 
     public ChatResponseDto chat(ChatRequestDto requestDto) {
         User user = userService.getCurrentUser();
@@ -170,17 +167,12 @@ public class ChatService {
         UserAgent userAgent = userAgentRepository.findByUserAndIsActiveTrue(user)
                 .orElseThrow(() -> new IllegalArgumentException("No active UserAgent found."));
 
-        String agentPrompt = openAIService.generateUserAgentPrompt(userAgent);
-        String finalInstruction = openAIService.generateFinalInstruction(userAgent);
+        String agentPrompt = generateUserAgentPrompt(userAgent);
+        String finalInstruction = generateFinalInstruction(userAgent);
 
         String scenarioPrompt = generateScenarioPrompt();
         String budgetAnalysisPrompt = generateBudgetAnalysisPrompt();
         String sampleResponse = generateSampleResponse(user.getNickname());
-//        String expenseInfo = """
-//            - 식비: 월평균 400,000원, 주 3회 지출
-//            - 쇼핑: 월평균 80,000원, 월 2회 지출
-//            - 교통: 월평균 70,000원, 주 5회 이용
-//        """;
         LocalDate today = LocalDate.now();
 
         String message = String.format(
@@ -207,7 +199,6 @@ public class ChatService {
                 scenarioPrompt,
                 budgetAnalysisPrompt,
                 budgetInfo,
-//                expenseInfo,
                 sampleResponse,
                 today,
                 user.getNickname(),
@@ -215,5 +206,28 @@ public class ChatService {
                 finalInstruction
         );
         return openAIService.generateGPTResponse(message, OpenAIOptionEnum.BALANCED);
+    }
+
+
+    // UserAgent(캐릭터 관련) 프롬프트 생성
+    public String generateUserAgentPrompt(UserAgent userAgent) {
+        return String.format(
+                """
+                너는 "%s"야.
+                - %s의 성격, %s한 어조를 가진 금융 어시스턴트. 항상 이 성격과 말투를 유지.
+                - 한국어로 대답, 마크다운은 절대 사용 금지
+                """,
+                userAgent.getAgent().getAgentName(),
+                userAgent.getAgent().getPersonality(),
+                userAgent.getAgentTone()
+        );
+    }
+
+    // UserAgent(캐릭터) 답변 마무리 문장 생성
+    public String generateFinalInstruction(UserAgent userAgent) {
+        return String.format(
+                "이제 %s의 개성을 반영하여 자연스럽게 답변을 생성해.",
+                userAgent.getAgent().getAgentName()
+        );
     }
 }
