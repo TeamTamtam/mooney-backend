@@ -25,7 +25,7 @@
 
 3. **PostgreSQL**
    - **설치 방법**  
-     - Windows: [공식 사이트](https://www.postgresql.org/download/)에서 설치 마법사 실행  
+     - Windows: [PostgreSQL 공식 사이트](https://www.postgresql.org/download/)에서 설치 마법사 실행  
      - macOS (Homebrew 권장):  
        ```bash
        brew install postgresql
