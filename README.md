@@ -5,7 +5,6 @@
 
 ## ✨ 프로젝트 개요
 
-\*\*Mooney(무니)\*\*는 예산 내 소비에 어려움을 겪는 **Z세대**를 위한 AI 기반 절약 가계부 서비스입니다.
 사용자가 스스로 설정한 예산 안에서 **지속 가능한 소비 습관**을 형성할 수 있도록 다음과 같은 기능을 제공합니다:
 
 * 📊 예산 대비 소비 기록을 기반으로 **예측 결과를 반영한 챌린지 자동 생성**
@@ -95,17 +94,23 @@ cd mooney-backend
 ```
 
 ### 2. 환경 변수 설정
-- 예시 파일(`src/main/resources/application-example.yml`)이 제공됩니다. 이 파일의 이름을 `application.yml`로 변경한 뒤, 각 항목에 실제 값을 채워넣어야 합니다. datasource(PostgreSQL), Redis, OpenAI API 키 등의 환경변수를 본인의 환경에 맞게 수정하세요.
+- 예시 파일(`src/main/resources/application-example.yml`)이 제공됩니다. 이 파일의 이름을 `application.yml`로 변경해 각 항목에 실제 값을 채워넣거나, `application.yml` 파일을 새로 작성해야 합니다. datasource(PostgreSQL), Redis, OpenAI API 키 등의 환경변수를 본인의 환경에 맞게 수정하세요.
+- 예: 
+```bash
+cat > application.yml
+# 준비된 내용을 복사 붙여넣고, ctrl+c로 저장
+```
 
 ### 3. 빌드
 ```bash
-./gradlew build
+cd mooney
+./gradlew build -x test # 테스트는 빌드 생략
 ```
 
 ### 4. 실행
 ```bash
 # 로컬 실행
-./gradlew bootRun
+./gradlew bootRun -x test
 
 # 또는 빌드된 JAR로 실행
 java -jar build/libs/*.jar
