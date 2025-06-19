@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class LlmCategoryClassifier {
 
-    @Value("${openai.api.key}")
+    @Value("${spring.ai.openai.api-key}")
     private String openAiApiKey;
 
     private static final String OPENAI_URL = "https://api.openai.com/v1/chat/completions";

@@ -22,7 +22,7 @@ public class AgentInitializer {
 
         Set.of(
                 "무니, 정석적이고 친절한 가계부 전문가, /png",
-                "써니, 활발하고 쾌활한 응원러, /png",
+                "써니, 활발하고 쾌활한 치어리더, /png",
                 "티타, 깐깐하고 엄격한 절약 전문가, /png",
                 "에피, 감성적이고 위로를 잘하는 힐링 캐릭터, /png"
         ).forEach(agent -> {
