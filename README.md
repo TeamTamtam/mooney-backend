@@ -1,4 +1,4 @@
-# Mooney Backend
+# mooney-backend
 
 **Mooney 프로젝트의 백엔드 서버 리포지토리입니다.**
 이 서버는 사용자 정보, 소비 데이터, 예산 관리, 챌린지 생성 및 통계 조회 등 **Mooney 전체 기능의 핵심 비즈니스 로직**을 담당합니다. Spring Boot, JPA, PostgreSQL, Redis, Spring Security, JWT, OpenAI API 등의 기술을 기반으로 구현되어 있습니다.
