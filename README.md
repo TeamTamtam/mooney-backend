@@ -92,20 +92,19 @@
 - git 명령어로 클론:
 ```bash
 git clone https://github.com/TeamTamtam/mooney-backend.git
-cd mooney-backend
+cd mooney-backend/mooney
 ```
 
 ### 2. 환경 변수 설정
 - 예시 파일(`src/main/resources/application-example.yml`)이 제공됩니다. 이 파일의 이름을 `application.yml`로 변경해 각 항목에 실제 값을 채워넣거나, `application.yml` 파일을 새로 작성해야 합니다. datasource(PostgreSQL), Redis, OpenAI API 키 등의 환경변수를 본인의 환경에 맞게 수정하세요.
 - 예: 
 ```bash
-cat > application.yml
+cat > src/main/resources/application.yml
 # 준비된 내용을 복사 붙여넣고, ctrl+c로 저장
 ```
 
 ### 3. 빌드
 ```bash
-cd mooney
 ./gradlew build -x test # 테스트는 빌드 생략
 ```
 
