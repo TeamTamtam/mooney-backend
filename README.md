@@ -102,6 +102,7 @@ cd mooney-backend/mooney
 cat > src/main/resources/application.yml
 # 준비된 내용을 복사 붙여넣고, ctrl+c로 저장
 ```
+- 또한, 로컬 Redis를 사용하는 경우 Redis 서버가 실행중이어야 합니다.
 
 ### 3. 빌드
 ```bash
@@ -117,7 +118,7 @@ cat > src/main/resources/application.yml
 java -jar build/libs/*.jar
 ```
 
-### 5. Docker로 실행
+### 5. Docker로 실행하고자 하는 경우
 ```bash
 docker build -t mooney-backend .
 docker run -p 8080:8080 mooney-backend
