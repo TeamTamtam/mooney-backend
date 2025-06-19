@@ -1,0 +1,46 @@
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://<DB_HOST>:<PORT>/<DB_NAME>?createDatabaseIfNotExist=true&characterEncoding=UTF-8&characterSetResults=UTF-8  # <-- DB 주소 입력
+    username: <DB_USERNAME>   # <-- DB 사용자명 입력
+    password: <DB_PASSWORD>   # <-- DB 비밀번호 입력
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 2
+      idle-timeout: 30000
+      connection-timeout: 20000
+      pool-name: HikariPool
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+        jdbc:
+          lob:
+            non_contextual_creation: true
+    open-in-view: false
+
+  data:
+    redis:
+      host: <REDIS_HOST>   # <-- Redis 주소 입력
+      port: <REDIS_PORT>   # <-- Redis 포트 입력
+
+  ai:
+    openai:
+      api-key: <OPENAI_API_KEY>   # <-- OpenAI API 키 입력
+
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+jwt:
+  secret:
+    access: <JWT_ACCESS_SECRET>   # <-- JWT Access Secret 입력
+    refresh: <JWT_REFRESH_SECRET> # <-- JWT Refresh Secret 입력 
