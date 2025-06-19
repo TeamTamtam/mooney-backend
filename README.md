@@ -1,7 +1,7 @@
 # Mooney Backend
 
 ## 소개
-본 프로젝트는 Spring Boot 기반의 백엔드 서버로, JPA, Spring Security, Batch, Redis, OpenAI API 등 다양한 오픈소스와 기술을 활용합니다.
+본 프로젝트는 Spring Boot 기반의 백엔드 서버로, JPA, Spring Security, JWT, PostgreSQL, Redis, Spring AI(OpenAI API) 등 다양한 기술을 활용합니다.
 
 ---
 
@@ -65,7 +65,7 @@
 
 6. **OpenAI API 키**
    - [OpenAI 플랫폼](https://platform.openai.com/)에서 발급 후 `application.yml`에 입력
-   
+
 ---
 
 ## 설치 및 실행 방법
@@ -112,7 +112,7 @@ docker run -p 8080:8080 mooney-backend
 ---
 
 ## 외부 라이브러리
-- Spring Boot, Spring Data JPA, Spring Security, Spring Spring AI, Swagger 등
+- Spring Boot, Spring Data JPA, Spring Security, Spring AI, Swagger 등
 - 자세한 의존성 목록은 `build.gradle`을 참고 부탁드립니다.
 
 ---
