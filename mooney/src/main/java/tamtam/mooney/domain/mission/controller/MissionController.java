@@ -37,13 +37,13 @@ public class MissionController {
         return ResponseEntity.ok(missionTabDto);
     }
 
-    @Operation(summary = "해당 사용자에 대해서만 미션 스케줄링 강제로 수행하기")
-    @PostMapping("/run")
-    public ResponseEntity<List<String>> getNewMission(@RequestParam LocalDate startDate) {
-        User user = userService.getCurrentUser();
-        List<String> newMissions = missionScheduler.runSchedulerManually(user, startDate);
-        return ResponseEntity.ok(newMissions);
-    }
+    // @Operation(summary = "해당 사용자에 대해서만 미션 스케줄링 강제로 수행하기")
+    // @PostMapping("/run")
+    // public ResponseEntity<List<String>> getNewMission(@RequestParam LocalDate startDate) {
+    //     User user = userService.getCurrentUser();
+    //     List<String> newMissions = missionScheduler.runSchedulerManually(user, startDate);
+    //     return ResponseEntity.ok(newMissions);
+    // }
 
 
 
