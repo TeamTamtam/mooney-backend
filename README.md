@@ -9,7 +9,7 @@
 
 1. **Java 21 (JDK)**
    - **설치 방법**  
-     - Windows: [Temurin/Oracle 사이트](https://adoptium.net/temurin/releases/?version=21)에서 `.msi` 내려받아 설치  
+     - Windows: [Temurin 공식 사이트](https://adoptium.net/temurin/releases/?version=21)에서 JDK21-LTS Windows 버전 내려받아 설치  
      - macOS (Homebrew 권장):  
        ```bash
        brew install openjdk@21
@@ -25,7 +25,7 @@
 
 3. **PostgreSQL**
    - **설치 방법**  
-     - Windows: [PostgreSQL 공식 사이트](https://www.postgresql.org/download/)에서 설치 마법사 실행  
+     - Windows: [PostgreSQL 공식 사이트](https://www.postgresql.org/download/)에서 Windows 버전 내려받아 설치
      - macOS (Homebrew 권장):  
        ```bash
        brew install postgresql
@@ -37,8 +37,9 @@
        ```
 
 4. **Redis**
-   - **설치 방법**  
-     - macOS (Homebrew 권장):  
+   - **설치 방법**
+       - Windows: [Redis 공식 사이트](https://redis.io/download)에서 Windows 버전 내려받아 설치
+           - macOS (Homebrew 권장):  
        ```bash
        brew install redis
        ```  
@@ -47,14 +48,13 @@
        sudo apt update
        sudo apt install -y redis-server
        ```  
-     - Windows: WSL 또는 Redis for Windows 활용  
    - **서버 실행**  
      ```bash
      redis-server
      ```
 
 5. **Docker** (선택)
-   - Windows/macOS: [Docker Desktop](https://www.docker.com/products/docker-desktop/) 설치  
+   - Windows/macOS: [Docker Desktop](https://www.docker.com/products/docker-desktop/)에서 Windows 버전 내려받아 설치  
    - Linux:  
      ```bash
      sudo apt update
