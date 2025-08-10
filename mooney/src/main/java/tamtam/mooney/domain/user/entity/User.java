@@ -47,10 +47,6 @@ public class User extends BaseTimeEntity {
     @Column(nullable = false)
     private Long exp;
 
-    @Getter
-    @Setter
-    private String refreshToken;
-
     @Builder
     public User(String email, String encryptedPassword, String nickname, ZoneId timezone) {
         this.email = email;

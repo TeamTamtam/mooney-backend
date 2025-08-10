@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Component;
+import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.repository.UserRepository;
 import tamtam.mooney.global.exception.CustomException;
 import tamtam.mooney.global.exception.ErrorCode;
@@ -21,39 +22,35 @@ import java.util.Date;
 public class JwtProvider {
     private final Key accessKey;
     private final Key refreshKey;
-    private final UserRepository userRepository;
+    private final RedisService redisService;
     private final CustomUserDetailsService customUserDetailsService;
     private static final Duration ACCESS_TOKEN_EXPIRE_TIME = Duration.ofHours(6);
     private static final Duration REFRESH_TOKEN_EXPIRE_TIME = Duration.ofDays(7);
 
     public JwtProvider(@Value("${jwt.secret.access}") String accessSecret,
                        @Value("${jwt.secret.refresh}") String refreshSecret,
-                       UserRepository userRepository, CustomUserDetailsService customUserDetailsService) {
+                       CustomUserDetailsService customUserDetailsService,
+                       RedisService redisService) {
         this.accessKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(accessSecret));
         this.refreshKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(refreshSecret));
-        this.userRepository = userRepository;
         this.customUserDetailsService = customUserDetailsService;
+        this.redisService = redisService;
     }
 
-    public String generateAccessToken(String username) {
-        return generateToken(username, accessKey, ACCESS_TOKEN_EXPIRE_TIME);
+    public String generateAccessToken(Long userId, String role) {
+        return generateToken(userId, role, accessKey, ACCESS_TOKEN_EXPIRE_TIME);
     }
 
-    // Redis를 사용하지 않음
-    public String generateRefreshToken(String username) {
-        String refreshToken = generateToken(username, refreshKey, REFRESH_TOKEN_EXPIRE_TIME);
-        userRepository.findByEmail(username).ifPresent(user -> {
-            user.setRefreshToken(refreshToken);
-            userRepository.save(user);
-        });
+    // 리프레시 토큰을 redis에 저장
+    public String generateRefreshToken(Long userId, String role) {
+        String refreshToken = generateToken(userId, role, refreshKey, REFRESH_TOKEN_EXPIRE_TIME);
+        String redisKey = "auth:refresh_token:" + userId;
+        redisService.setValuesWithTimeout(redisKey, refreshToken, REFRESH_TOKEN_EXPIRE_TIME);
         return refreshToken;
     }
 
-    private String generateToken(String username, Key key, Duration expiredTime) {
-        Claims claims = Jwts.claims().setSubject(username);
-        String role = userRepository.findByEmail(username)
-                .map(user -> user.getRole().name())
-                .orElse("ROLE_USER");
+    private String generateToken(Long userId, String role, Key key, Duration expiredTime) {
+        Claims claims = Jwts.claims().setSubject(userId.toString());
         claims.put("role", role);
 
         Date now = new Date();

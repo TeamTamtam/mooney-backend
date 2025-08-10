@@ -14,12 +14,14 @@ import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.global.exception.CustomException;
 import tamtam.mooney.global.exception.ErrorCode;
 import tamtam.mooney.global.security.JwtProvider;
+import tamtam.mooney.global.security.RedisService;
 
 @Service
 @Transactional
 @RequiredArgsConstructor
 public class AuthService {
     private final UserService userService;
+    private final RedisService redisService;
     private final JwtProvider jwtProvider;
     private final PasswordEncoder passwordEncoder;
     private final UserAgentService userAgentService;
@@ -52,7 +54,7 @@ public class AuthService {
         // '무니' Agent를 User에게 추가
         userAgentService.assignDefaultAgentToUser(newUser);
 
-        return generateTokenResponse(newUser);
+        return generateNewTokenPair(newUser);
     }
 
     public TokenResponseDto login(AuthLoginRequestDto requestDto) {
@@ -62,29 +64,33 @@ public class AuthService {
             throw new CustomException(ErrorCode.INVALID_CREDENTIALS);
         }
 
-        return generateTokenResponse(user);
+        return generateNewTokenPair(user);
     }
 
     public TokenResponseDto refreshAccessToken(String refreshToken) {
         jwtProvider.validateRefreshToken(refreshToken);
 
         Claims claims = jwtProvider.getRefreshTokenClaims(refreshToken);
-        User user = userService.getUserByEmail(claims.getSubject());
+        String userId = claims.getSubject();
+        User user = userService.getUserById(Long.parseLong(userId));
+        String redisKey = "auth:refresh_token:" + userId;
+        Object storedRefreshToken = redisService.getValues(redisKey);
 
-        if (user == null || !user.getRefreshToken().equals(refreshToken)) {
+        if (storedRefreshToken == null || !storedRefreshToken.toString().equals(refreshToken)) {
             throw new CustomException(ErrorCode.INVALID_TOKEN);
         }
 
-        String newAccessToken = jwtProvider.generateAccessToken(user.getEmail());
-        return new TokenResponseDto(newAccessToken, refreshToken);
+        // 기존 리프레시 토큰 삭제
+        redisService.deleteValues(redisKey);
+
+        // 새 액세스 토큰 및 리프레시 토큰 생성
+        return generateNewTokenPair(user);
     }
 
     // 토큰 생성 및 저장
-    private TokenResponseDto generateTokenResponse(User user) {
-        String accessToken = jwtProvider.generateAccessToken(user.getEmail());
-        String refreshToken = jwtProvider.generateRefreshToken(user.getEmail());
-
-        userService.updateRefreshToken(user.getEmail(), refreshToken);
+    private TokenResponseDto generateNewTokenPair(User user) {
+        String accessToken = jwtProvider.generateAccessToken(user.getUserId(), user.getRole().name());
+        String refreshToken = jwtProvider.generateRefreshToken(user.getUserId(), user.getRole().name());
         return new TokenResponseDto(accessToken, refreshToken);
     }
 

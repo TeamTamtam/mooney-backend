@@ -46,13 +46,6 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public void updateRefreshToken(String username, String refreshToken) {
-        userRepository.findByEmail(username).ifPresent(user -> {
-            user.setRefreshToken(refreshToken);
-            userRepository.save(user);
-        });
-    }
-
     @Transactional(readOnly = true)
     public String getCurrentUserNickname() {
         return getCurrentUser().getNickname();
