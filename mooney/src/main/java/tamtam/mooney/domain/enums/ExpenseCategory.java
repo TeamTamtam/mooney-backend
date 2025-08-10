@@ -2,8 +2,15 @@ package tamtam.mooney.domain.enums;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+import java.util.Arrays;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Getter
+@RequiredArgsConstructor
 public enum ExpenseCategory {
     FOOD(1, "식비", "🍽️"),
     CAFE_SNACKS(2, "카페/간식", "🍩"),
@@ -23,7 +30,7 @@ public enum ExpenseCategory {
     CHILDCARE(16, "자녀/육아", "👶"),
     PET(17, "반려동물", "🐶"),
     GIFT_CEREMONY(18, "경조/선물", "🎁"),
-    OTHER(19, "이체", "↔️"); // 그 외
+    OTHER(19, "기타", "↔️"); // 그 외
 
     @NotNull
     private final int code;  // 숫자 값 추가
@@ -32,30 +39,19 @@ public enum ExpenseCategory {
     @NotNull
     private final String icon;
 
-    ExpenseCategory(int code, String categoryName, String icon) {
-        this.code = code;
-        this.categoryName = categoryName;
-        this.icon = icon;
-    }
+    private static final Map<Integer, ExpenseCategory> BY_CODE =
+            Arrays.stream(values()).collect(Collectors.toMap(ExpenseCategory::getCode, Function.identity()));
+    private static final Map<String, ExpenseCategory> BY_NAME =
+            Arrays.stream(values()).collect(Collectors.toMap(c -> c.categoryName, Function.identity()));
 
-    // 숫자로 ENUM 변환 (DB에서 불러올 때 사용)
+    // 숫자로 ENUM 변환
     public static ExpenseCategory fromCode(int code) {
-        for (ExpenseCategory category : ExpenseCategory.values()) {
-            if (category.getCode() == code) {
-                return category;
-            }
-        }
-        throw new IllegalArgumentException("Invalid ExpenseCategory code: " + code);
+        return BY_CODE.getOrDefault(code, OTHER);
     }
 
     // 한글 카테고리명으로 ENUM 변환
     public static ExpenseCategory fromCategoryName(String name) {
-        for (ExpenseCategory category : ExpenseCategory.values()) {
-            if (category.getCategoryName().equals(name)) {
-                return category;
-            }
-        }
-        // 해당되지 않으면 OTHER로 처리 (또는 예외 던져도 됨)
-        return OTHER;
+        if (name == null) return OTHER;
+        return BY_NAME.getOrDefault(name.trim(), OTHER);
     }
 }

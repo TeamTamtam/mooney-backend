@@ -2,6 +2,7 @@ package tamtam.mooney.domain.transaction.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.formula.functions.T;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import tamtam.mooney.domain.mission.service.MissionService;
@@ -14,6 +15,8 @@ import tamtam.mooney.domain.transaction.repository.ExpenseRepository;
 import tamtam.mooney.domain.transaction.repository.TransactionRepository;
 import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.service.UserService;
+import tamtam.mooney.global.openai.OpenAIOptionEnum;
+import tamtam.mooney.global.openai.OpenAIService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -31,8 +34,8 @@ public class ExpenseService {
     private final TransactionRepository transactionRepository;
     private final ExpenseRepository expenseRepository;
     private final UserService userService;
-    // private final LlmCategoryClassifier llmCategoryClassifier;
     private final MissionService missionService;
+    private final OpenAIService openAIService;
 
     // 정규식 패턴 → 카테고리 매핑 리스트
     private final List<PatternCategory> patternCategoryList = List.of(
@@ -87,13 +90,16 @@ public class ExpenseService {
     public String createExpense(ExpenseAddRequestDto request) {
         User user = userService.getCurrentUser();
         String payee = request.payee();
+        String prompt = String.format("%s 가 어떤 지출처인지 파악해주세요.", payee);
 
         ExpenseCategory category = patternCategoryList.stream()
                 .filter(pc -> pc.pattern.matcher(payee).matches())
                 .map(pc -> pc.category)
                 .findFirst()
-                .orElse(ExpenseCategory.FOOD);
-
+                .orElseGet(() -> {
+                    String code = openAIService.generateGPTResponse(prompt, OpenAIOptionEnum.BALANCED);
+                    return ExpenseCategory.fromCode(Integer.parseInt(code));
+                });
         return saveAndReturnCategory(request, user, category);
     }
 
