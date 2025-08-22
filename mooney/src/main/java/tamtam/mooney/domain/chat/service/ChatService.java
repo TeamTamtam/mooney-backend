@@ -20,7 +20,9 @@ import tamtam.mooney.domain.user.service.UserService;
 import tamtam.mooney.global.openai.OpenAIOptionEnum;
 import tamtam.mooney.global.openai.OpenAIService;
 import tamtam.mooney.global.redis.GenericRedisRepository;
+import tamtam.mooney.global.security.RedisService;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -39,6 +41,7 @@ public class ChatService {
     private final CategoryBudgetService categoryBudgetService;
     private final ExpenseService expenseService;
     private final GenericRedisRepository<ChatMessage> chatRedisRepository;
+    private final RedisService redisService;
 
     // 채팅 저장
     public void saveChatMessage(String userId, String message, String role) {
@@ -78,7 +81,15 @@ public class ChatService {
 
     @Transactional(readOnly = true)
     public List<ChatBudgetInfoDto> getCategoryBudgetRemainingAmount(User user) {
-        // 이번 월의 카테고리별 예산 조회
+        String cacheKey = "budget:remaining:" + user.getUserId() + ":" + LocalDate.now().withDayOfMonth(1);
+        
+        // 캐시에서 예산 정보 조회 시도
+        Object cachedBudgetInfo = redisService.getValues(cacheKey);
+        if (cachedBudgetInfo != null) {
+            return (List<ChatBudgetInfoDto>) cachedBudgetInfo;
+        }
+        
+        // 캐시가 없으면 DB에서 조회
         LocalDate startOfMonth = LocalDate.now().withDayOfMonth(1);
         MonthlyBudget monthlyBudget = monthlyBudgetService.getMonthlyBudget(user, startOfMonth);
         List<CategoryBudget> budgets = categoryBudgetService.findByMonthlyBudget(monthlyBudget);
@@ -87,7 +98,7 @@ public class ChatService {
         Map<ExpenseCategory, Long> totalExpensesByCategory = expenseService.mapTotalExpenseForAllCategories(user, startOfMonth);
 
         // 각 카테고리의 실제 지출 계산
-        return budgets.stream()
+        List<ChatBudgetInfoDto> budgetInfoDtos = budgets.stream()
                 .map(cb -> {
                     Long spent = totalExpensesByCategory.getOrDefault(cb.getExpenseCategory(), 0L);
                     long remaining = Math.max(cb.getAmount() - spent, 0);
@@ -97,6 +108,11 @@ public class ChatService {
                             remaining
                     );
                 }).collect(Collectors.toList());
+        
+        // 캐시에 저장 (10분간 유지)
+        redisService.setValuesWithTimeout(cacheKey, budgetInfoDtos.toString(), Duration.ofMinutes(10));
+        
+        return budgetInfoDtos;
     }
 
     // 상황 판단 프롬프트 (GPT가 CHOICE_RECOMMENDATION 또는 YES_NO_DECISION 판단)

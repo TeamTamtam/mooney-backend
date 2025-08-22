@@ -16,6 +16,7 @@ import tamtam.mooney.domain.user.entity.User;
 import tamtam.mooney.domain.user.service.UserService;
 import tamtam.mooney.global.exception.CustomException;
 import tamtam.mooney.global.exception.ErrorCode;
+import tamtam.mooney.global.security.RedisService;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -34,6 +35,7 @@ public class BudgetService {
     private final RecurringTransactionService recurringTransactionService;
     private final ScheduledTransactionService scheduledTransactionService;
     private final ExpenseService expenseService;
+    private final RedisService redisService;
 
     // 첫 예산 수립
     public void saveFirstBudget(FirstBudgetRequestDto requestDto) {
@@ -180,6 +182,10 @@ public class BudgetService {
                 throw new CustomException(ErrorCode.RESOURCE_NOT_FOUND);
             }
         }
+
+        // 예산 잔액 캐시 무효화
+        String cacheKey = "budget:remaining:" + user.getUserId() + ":" + startOfMonth;
+        redisService.deleteValues(cacheKey);
     }
 
 }
